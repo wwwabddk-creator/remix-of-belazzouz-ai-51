@@ -13,7 +13,6 @@ import { checkAndConsume, isUnsafePrompt, safetyRefusal, parseMemoryCommand, rem
 
 import { supabase } from "@/integrations/supabase/client";
 import { chatStream } from "@/lib/chat.functions";
-import { getWeather } from "@/lib/weather.functions";
 import { webSearch, type WebSearchResult } from "@/lib/search.functions";
 import { aiImageGenerate } from "@/lib/imagegen.functions";
 import { aiImageEdit } from "@/lib/image.functions";
@@ -41,7 +40,6 @@ function ChatPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [weather, setWeather] = useState<string | null>(null);
   const [showCall, setShowCall] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
   const [showVip, setShowVip] = useState(false);
@@ -49,7 +47,6 @@ function ChatPage() {
   const [historyKey, setHistoryKey] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const streamFn = useServerFn(chatStream);
-  const weatherFn = useServerFn(getWeather);
   const searchFn = useServerFn(webSearch);
   const genFn = useServerFn(aiImageGenerate);
   const editFn = useServerFn(aiImageEdit);
@@ -63,13 +60,6 @@ function ChatPage() {
 
   useEffect(() => { if (!loading && !user) nav({ to: "/" }); }, [loading, user, nav]);
 
-  useEffect(() => {
-    if (!user || !("geolocation" in navigator)) return;
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const w = await weatherFn({ data: { lat: pos.coords.latitude, lon: pos.coords.longitude } });
-      if (w.ok) setWeather(`Current temp ${w.temp}°C, wind ${w.wind} km/h.`);
-    }, () => {});
-  }, [user, weatherFn]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -234,7 +224,7 @@ function ChatPage() {
               : `\n\nUser's saved memories (use them to personalize):\n- ${mem.join("\n- ")}`)
           : "",
       ].join("").trim();
-      const iter = (await streamFn({ data: { messages: next, lang, mode, weather: weather ?? undefined, persona: personaWithMem || undefined, webContext: search.summary || undefined, webConfidence: (search as { confidence?: number }).confidence, webProviders: (search as { providersUsed?: string[] }).providersUsed } })) as AsyncIterable<{ delta?: string }>;
+      const iter = (await streamFn({ data: { messages: next, lang, mode, persona: personaWithMem || undefined, webContext: search.summary || undefined, webConfidence: (search as { confidence?: number }).confidence, webProviders: (search as { providersUsed?: string[] }).providersUsed } })) as AsyncIterable<{ delta?: string }>;
       let acc = "";
       for await (const chunk of iter) {
         if (abortRef.current?.signal.aborted) break;
@@ -359,7 +349,6 @@ function ChatPage() {
                 <div className="rounded-2xl border border-border bg-card/40 p-6 text-center text-muted-foreground">
                   <p className="brand-text text-3xl font-bold">{t.brand}</p>
                   <p className="mt-2 text-sm">{t.tagline}</p>
-                  {weather && <p className="mt-2 text-xs">📍 {weather}</p>}
                 </div>
               )}
               {messages.map((m, i) => (
