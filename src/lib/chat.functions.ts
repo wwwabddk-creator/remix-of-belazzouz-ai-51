@@ -48,7 +48,7 @@ export const chatStream = createServerFn({ method: "POST" })
     // Mode-aware silent model fallback chain.
     const FAST = ["google/gemini-2.5-flash-lite", "google/gemini-3-flash-preview", "google/gemini-2.5-flash"];
     const DEEP = ["openai/gpt-5", "google/gemini-2.5-pro", "openai/gpt-5-mini"];
-    const HYBRID = ["google/gemini-3-flash-preview", "google/gemini-2.5-flash", "openai/gpt-5-mini", "google/gemini-2.5-flash-lite"];
+    const HYBRID = ["google/gemini-2.5-flash-lite", "google/gemini-2.5-flash", "google/gemini-3-flash-preview", "openai/gpt-5-mini"];
     const MODELS = data.mode === "fast" ? FAST : data.mode === "deep" ? DEEP : HYBRID;
 
     if (data.mode === "fast") {
