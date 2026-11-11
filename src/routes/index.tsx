@@ -11,7 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Crown, Languages, Paintbrush } from "lucide-react";
 import { VipModal } from "@/components/VipModal";
 
-export const Route = createFileRoute("/")({ component: () => <AppPrefsProvider><Landing /></AppPrefsProvider> });
+export const Route = createFileRoute("/")({
+  head: () => ({ meta: [
+    { title: "BELAZO AI — Sign In" },
+    { name: "description", content: "Sign in to BELAZO AI to create and chat." },
+    { property: "og:title", content: "BELAZO AI — Sign In" },
+    { property: "og:description", content: "Access your BELAZO AI account and conversations." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
+  component: () => <AppPrefsProvider><Landing /></AppPrefsProvider>,
+});
 
 function Landing() {
   const { lang, setLang, reset } = useAppPrefs();

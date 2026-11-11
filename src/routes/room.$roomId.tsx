@@ -13,6 +13,13 @@ import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { roomAiReply } from "@/lib/room.functions";
 
 export const Route = createFileRoute("/room/$roomId")({
+  head: () => ({ meta: [
+    { title: "BELAZO AI — Shared Room" },
+    { name: "description", content: "Chat together with BELAZO AI in a shared room." },
+    { property: "og:title", content: "BELAZO AI — Shared Room" },
+    { property: "og:description", content: "A shared conversation with friends and BELAZO AI." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
   component: () => (
     <AppPrefsProvider>
       <RoomPage />
