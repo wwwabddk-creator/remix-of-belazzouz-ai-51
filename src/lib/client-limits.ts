@@ -69,22 +69,9 @@ export function safetyRefusal(lang: "en" | "ar") {
     : "I can't help with that request. Try a different, safer phrasing.";
 }
 
-// ---------- Library (images / code / text) ----------
-export type LibKind = "image" | "code" | "text";
-export type LibItem = { id: string; kind: LibKind; title: string; url?: string; body?: string; createdAt: number };
-const LIB_KEY = "belazzouz.library";
-
-export function readLibrary(): LibItem[] {
-  try { return JSON.parse(localStorage.getItem(LIB_KEY) || "[]"); } catch { return []; }
-}
-export function writeLibrary(items: LibItem[]) {
-  try { localStorage.setItem(LIB_KEY, JSON.stringify(items.slice(0, 300))); } catch { /* ignore */ }
-}
-export function addLibraryItem(item: Omit<LibItem, "id" | "createdAt"> & { id?: string }) {
-  const list = readLibrary();
-  list.unshift({ id: item.id ?? crypto.randomUUID(), createdAt: Date.now(), ...item });
-  writeLibrary(list);
-}
+// Library storage is isolated from usage limits and user memory.
+export { readLibrary, addLibraryItem } from "./library";
+export type { LibKind, LibItem } from "./library";
 
 // ---------- Memory (remember / forget) ----------
 const MEM_KEY = "belazzouz.memory";

@@ -9,9 +9,11 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  readLibrary, writeLibrary, readMemory, forgetFact, rememberFact,
-  type LibItem, type LibKind,
+  readMemory, forgetFact, rememberFact,
 } from "@/lib/client-limits";
+import { readLibrary, removeLibraryItem, LIBRARY_CHANGED, type LibItem, type LibKind } from "@/lib/library";
+import { filterLibrary } from "@/lib/library-content";
+import { toast } from "sonner";
 
 export type Conv = { id: string; title: string; updated_at: string };
 
@@ -44,10 +46,25 @@ export function ChatHistorySidebar({
   };
   useEffect(() => {
     load();
-    setLib(readLibrary());
     setMem(readMemory());
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [user, refreshKey]);
+
+  useEffect(() => {
+    let active = true;
+    setLib([]);
+    if (!user) return;
+    const reload = () => {
+      readLibrary(user.id).then((items) => { if (active) setLib(items); })
+        .catch(() => { if (active) toast.error(lang === "ar" ? "تعذر تحميل المكتبة." : "Could not load library."); });
+    };
+    const onChange = (event: Event) => {
+      if ((event as CustomEvent<string>).detail === user.id) reload();
+    };
+    reload();
+    window.addEventListener(LIBRARY_CHANGED, onChange);
+    return () => { active = false; window.removeEventListener(LIBRARY_CHANGED, onChange); };
+  }, [user?.id, lang]);
 
   const delOne = async (id: string) => {
     if (!confirm(t.confirmDelete)) return;
@@ -69,9 +86,10 @@ export function ChatHistorySidebar({
     await supabase.from("conversations").delete().eq("user_id", user.id);
     onNew(); load();
   };
-  const removeLib = (id: string) => {
-    const next = lib.filter((i) => i.id !== id);
-    setLib(next); writeLibrary(next);
+  const removeLib = async (id: string) => {
+    if (!user) return;
+    try { await removeLibraryItem(id, user.id); }
+    catch { toast.error(lang === "ar" ? "تعذر حذف العنصر." : "Could not delete item."); }
   };
   const addMem = () => {
     const v = window.prompt(lang === "ar" ? "ماذا تريد أن أتذكر؟" : "What should I remember?");
@@ -81,7 +99,7 @@ export function ChatHistorySidebar({
     forgetFact(fact); setMem(readMemory());
   };
 
-  const filteredLib = lib.filter((i) => libFilter === "all" || i.kind === libFilter);
+  const filteredLib = filterLibrary(lib, libFilter);
   const kindIcon = (k: LibKind) =>
     k === "image" ? <ImageIcon className="h-4 w-4 opacity-60" /> :
     k === "code" ? <Code className="h-4 w-4 opacity-60" /> :
@@ -147,16 +165,16 @@ export function ChatHistorySidebar({
         <>
           <div className="flex gap-1 rounded-md bg-background/40 p-1 text-xs">
             {(["all", "image", "code", "text"] as const).map((k) => (
-              <button
+              <Button variant="ghost"
                 key={k}
                 onClick={() => setLibFilter(k)}
-                className={`flex-1 rounded px-2 py-1 ${libFilter === k ? "bg-card" : "text-muted-foreground"}`}
+                className={`h-auto flex-1 rounded px-2 py-1 text-xs ${libFilter === k ? "bg-card" : "text-muted-foreground"}`}
               >
                 {k === "all" ? (lang === "ar" ? "الكل" : "All")
                   : k === "image" ? (lang === "ar" ? "صور" : "Images")
                   : k === "code" ? (lang === "ar" ? "كود" : "Code")
                   : (lang === "ar" ? "نص" : "Text")}
-              </button>
+              </Button>
             ))}
           </div>
           <div className="-mx-1 mt-1 flex-1 overflow-y-auto px-1">
@@ -174,15 +192,15 @@ export function ChatHistorySidebar({
                   ) : (
                     <span className="flex-1 truncate text-sm">{item.title}</span>
                   )}
-                  <button onClick={() => removeLib(item.id)} className="rounded p-1 opacity-60 hover:bg-destructive/20 hover:text-destructive hover:opacity-100">
+                  <Button variant="ghost" size="icon" aria-label={lang === "ar" ? "حذف العنصر" : "Delete item"} onClick={() => removeLib(item.id)} className="h-6 w-6 rounded p-1 opacity-60 hover:bg-destructive/20 hover:text-destructive hover:opacity-100">
                     <Trash2 className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
                 {item.kind === "image" && item.url && (
                   <img src={item.url} alt={item.title} className="mt-1 max-h-28 w-auto rounded" />
                 )}
                 {item.body && item.kind !== "image" && (
-                  <pre className="mt-1 max-h-24 overflow-auto rounded bg-background/40 p-1 text-[10px]">{item.body.slice(0, 400)}</pre>
+                  <pre className="mt-1 max-h-24 overflow-auto rounded bg-background/40 p-1 text-[10px]">{item.body}</pre>
                 )}
               </div>
             ))}
