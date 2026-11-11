@@ -8,7 +8,6 @@ import { T } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, ArrowLeft, Copy, Sparkles } from "lucide-react";
-import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { AttachmentButton, type Attachment } from "@/components/AttachmentButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { roomAiReply } from "@/lib/room.functions";
@@ -156,10 +155,6 @@ function RoomPage() {
     }
   };
 
-  const sendVoice = async (url: string) => {
-    await insertMsg("🎤 voice note", { audio_url: url });
-  };
-
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -266,7 +261,6 @@ function RoomPage() {
           >
             <Sparkles className="h-5 w-5" />
           </Button>
-          <VoiceRecorder onSent={sendVoice} />
           <Button
             onClick={send}
             disabled={sending || (!input.trim() && !pending)}
