@@ -11,6 +11,8 @@ import { Send, ArrowLeft, Copy, Sparkles } from "lucide-react";
 import { AttachmentButton, type Attachment } from "@/components/AttachmentButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { roomAiReply } from "@/lib/room.functions";
+import { saveGeneratedContent } from "@/lib/library";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/room/$roomId")({
   head: () => ({ meta: [
@@ -112,6 +114,7 @@ function RoomPage() {
   };
 
   const askAi = async (recent: RMsg[]) => {
+    const requestedAt = new Date().toISOString();
     const history = recent
       .filter((m) => m.content.trim())
       .slice(-12)
@@ -121,7 +124,14 @@ function RoomPage() {
         content: m.content,
       }));
     try {
-      await aiReplyFn({ data: { roomId, lang, persona: persona || undefined, history } });
+      const reply = await aiReplyFn({ data: { roomId, lang, persona: persona || undefined, history } });
+      if (reply.ok && user) {
+        const { data: generated } = await supabase.from("chat_room_messages")
+          .select("content").eq("room_id", roomId).eq("role", "assistant")
+          .gte("created_at", requestedAt).order("created_at", { ascending: false }).limit(1).maybeSingle();
+        if (generated?.content) await saveGeneratedContent(generated.content, history.at(-1)?.content || roomName, user.id)
+          .catch(() => toast.error(lang === "ar" ? "تعذر حفظ المحتوى في المكتبة." : "Could not save content to the library."));
+      }
     } catch (e) {
       console.error("ai reply failed", e);
     }
