@@ -26,7 +26,6 @@ import { AttachmentButton, type Attachment } from "@/components/AttachmentButton
 import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { MessageContent } from "@/components/MessageContent";
 import { VoiceCallModal } from "@/components/VoiceCallModal";
-import { VoiceRecorder } from "@/components/VoiceRecorder";
 
 export const Route = createFileRoute("/chat")({ component: () => <AppPrefsProvider><ChatPage /></AppPrefsProvider> });
 
@@ -252,24 +251,6 @@ function ChatPage() {
     }
   };
 
-  const sendVoice = async (url: string) => {
-    const content = `__audio__:${url}`;
-    setMessages((m) => [...m, { role: "user", content }]);
-    let activeId = convId;
-    if (user) {
-      try {
-        if (!activeId) {
-          const ins = await supabase.from("conversations").insert({ user_id: user.id, title: lang === "ar" ? "رسالة صوتية" : "Voice message" }).select("id").single();
-          if (ins.data) { activeId = ins.data.id; setConvId(activeId); }
-        }
-        if (activeId) {
-          await supabase.from("messages").insert({ conversation_id: activeId, user_id: user.id, role: "user", content });
-          setHistoryKey((k) => k + 1);
-        }
-      } catch { /* ignore */ }
-    }
-  };
-
   const followUp = (instruction: string) => {
     setInput(instruction);
     setTimeout(() => send(), 0);
@@ -420,7 +401,6 @@ function ChatPage() {
                 rows={1}
                 className="min-h-[3.5rem] max-h-48 resize-none border-0 bg-transparent text-base focus-visible:ring-0"
               />
-              <VoiceRecorder onSent={sendVoice} />
               {busy ? (
                 <Button onClick={stop} className="h-14 w-14 bg-destructive text-destructive-foreground hover:bg-destructive/90" title={lang === "ar" ? "إيقاف" : "Stop"}>
                   <Square className="h-5 w-5" />

@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Send, Users, Plus, ArrowRight } from "lucide-react";
 import { useAppPrefs } from "@/lib/app-prefs";
 import { T } from "@/lib/i18n";
-import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { AttachmentButton, type Attachment } from "@/components/AttachmentButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { MessageContent } from "@/components/MessageContent";
@@ -148,18 +147,6 @@ export function GroupChat() {
     }
   };
 
-  const sendVoice = async (publicUrl: string) => {
-    if (!user) return;
-    const avatar = (user.user_metadata?.avatar_url as string | undefined) ?? null;
-    await supabase.from("group_messages").insert({
-      content: "🎤 voice note",
-      user_id: user.id,
-      display_name: displayName(),
-      avatar_url: avatar,
-      audio_url: publicUrl,
-    });
-  };
-
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-border bg-card/40 p-4">
@@ -233,7 +220,6 @@ export function GroupChat() {
             }}
             className="h-12 flex-1 text-base"
           />
-          <VoiceRecorder onSent={sendVoice} />
           <Button onClick={send} disabled={sending || (!input.trim() && !pending)} className="h-12 w-12 brand-gradient text-primary-foreground">
             <Send className="h-5 w-5" />
           </Button>
