@@ -1,4 +1,4 @@
 # Library
-- [ ] Save generated images, code and text in the existing library.
-- [ ] Refresh category views and All immediately without changing the design.
-- [ ] Test classification, persistence and the signed-in creation flow.
+- [x] Save generated images, code and text in the existing library.
+- [x] Refresh category views and All immediately without changing the design.
+- [x] Test classification, persistence and the signed-in creation flow.

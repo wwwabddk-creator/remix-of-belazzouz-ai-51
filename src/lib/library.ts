@@ -17,6 +17,20 @@ function openLibrary(): Promise<IDBDatabase> {
 }
 
 export async function readLibrary(owner: string): Promise<LibItem[]> {
+  // Keep existing device-local items when upgrading from the original library.
+  const legacyKey = "belazzouz.library";
+  try {
+    const raw = localStorage.getItem(legacyKey);
+    if (raw) {
+      const legacy: unknown = JSON.parse(raw);
+      if (Array.isArray(legacy)) {
+        const drafts = legacy.filter((item): item is LibraryDraft =>
+          item && typeof item.title === "string" && ["image", "code", "text"].includes(item.kind));
+        if (drafts.length) await updateLibrary(owner, drafts, undefined, false);
+        localStorage.removeItem(legacyKey);
+      }
+    }
+  } catch { /* Leave legacy data intact if migration cannot complete. */ }
   const db = await openLibrary();
   try {
     return await new Promise((resolve, reject) => {
@@ -29,7 +43,7 @@ export async function readLibrary(owner: string): Promise<LibItem[]> {
   } finally { db.close(); }
 }
 
-async function updateLibrary(owner: string, drafts: LibraryDraft[], removeId?: string) {
+async function updateLibrary(owner: string, drafts: LibraryDraft[], removeId?: string, notify = true) {
   const db = await openLibrary();
   try {
     await new Promise<void>((resolve, reject) => {
@@ -44,7 +58,7 @@ async function updateLibrary(owner: string, drafts: LibraryDraft[], removeId?: s
       transaction.onerror = () => reject(transaction.error);
       transaction.onabort = () => reject(transaction.error ?? new Error("Library save failed"));
     });
-    window.dispatchEvent(new CustomEvent(LIBRARY_CHANGED, { detail: owner }));
+    if (notify) window.dispatchEvent(new CustomEvent(LIBRARY_CHANGED, { detail: owner }));
   } finally { db.close(); }
 }
 
