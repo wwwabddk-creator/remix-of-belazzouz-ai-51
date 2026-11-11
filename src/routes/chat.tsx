@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { checkAndConsume, isUnsafePrompt, safetyRefusal, parseMemoryCommand, rememberFact, forgetFact, readMemory, addLibraryItem } from "@/lib/client-limits";
+import { checkAndConsume, isUnsafePrompt, safetyRefusal, parseMemoryCommand, rememberFact, forgetFact, readMemory } from "@/lib/client-limits";
+import { addLibraryItem, saveGeneratedContent } from "@/lib/library";
 
 import { supabase } from "@/integrations/supabase/client";
 import { chatStream } from "@/lib/chat.functions";
@@ -27,7 +28,16 @@ import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { MessageContent } from "@/components/MessageContent";
 import { VoiceCallModal } from "@/components/VoiceCallModal";
 
-export const Route = createFileRoute("/chat")({ component: () => <AppPrefsProvider><ChatPage /></AppPrefsProvider> });
+export const Route = createFileRoute("/chat")({
+  head: () => ({ meta: [
+    { title: "BELAZO AI — Chat & Library" },
+    { name: "description", content: "Create images, code and text with BELAZO AI and revisit them in your library." },
+    { property: "og:title", content: "BELAZO AI — Chat & Library" },
+    { property: "og:description", content: "Your BELAZO AI conversations and generated content library." },
+    { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+  ] }),
+  component: () => <AppPrefsProvider><ChatPage /></AppPrefsProvider>,
+});
 
 type Msg = { role: "user" | "assistant"; content: string; sources?: WebSearchResult[]; attachments?: Attachment[]; image?: string };
 
@@ -55,6 +65,7 @@ function ChatPage() {
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isSubscriber = isSuperAdmin;
+  const libraryError = () => toast.error(lang === "ar" ? "تعذر حفظ المحتوى في المكتبة." : "Could not save content to the library.");
 
 
   useEffect(() => { if (!loading && !user) nav({ to: "/" }); }, [loading, user, nav]);
@@ -128,7 +139,7 @@ function ChatPage() {
             copy[copy.length - 1] = { role: "assistant", content: lang === "ar" ? "تم التعديل:" : "Edited:", image: r.dataUrl };
             return copy;
           });
-          addLibraryItem({ kind: "image", title: q.slice(0, 60), url: r.dataUrl });
+          if (user) await addLibraryItem({ kind: "image", title: q.slice(0, 60), url: r.dataUrl }, user.id).catch(libraryError);
         } finally { setBusy(false); }
         return;
       }
@@ -146,7 +157,7 @@ function ChatPage() {
             copy[copy.length - 1] = { role: "assistant", content: lang === "ar" ? "تم توليد الصورة:" : "Generated image:", image: r.dataUrl };
             return copy;
           });
-          addLibraryItem({ kind: "image", title: prompt.slice(0, 60), url: r.dataUrl });
+          if (user) await addLibraryItem({ kind: "image", title: prompt.slice(0, 60), url: r.dataUrl }, user.id).catch(libraryError);
         } finally { setBusy(false); }
         return;
       }
@@ -185,7 +196,7 @@ function ChatPage() {
           copy[copy.length - 1] = { role: "assistant", content: lang === "ar" ? "تم توليد الصورة:" : "Generated image:", image: r.dataUrl };
           return copy;
         });
-        addLibraryItem({ kind: "image", title: genMatch[2].slice(0, 60), url: r.dataUrl });
+        if (user) await addLibraryItem({ kind: "image", title: genMatch[2].slice(0, 60), url: r.dataUrl }, user.id).catch(libraryError);
       } finally { setBusy(false); }
       return;
     }
@@ -237,6 +248,9 @@ function ChatPage() {
         });
       }
 
+      if (user && acc.trim() && !abortRef.current?.signal.aborted) {
+        await saveGeneratedContent(acc, q || acc, user.id).catch(libraryError);
+      }
       if (user && activeId && acc) {
         try {
           await supabase.from("messages").insert({ conversation_id: activeId, user_id: user.id, role: "assistant", content: acc });

@@ -10,6 +10,8 @@ import { useAppPrefs } from "@/lib/app-prefs";
 import { T } from "@/lib/i18n";
 import { useAuth } from "@/hooks/use-auth";
 import { aiImageEdit } from "@/lib/image.functions";
+import { addLibraryItem } from "@/lib/library";
+import { toast } from "sonner";
 
 type Adj = { brightness: number; contrast: number; saturate: number; sharpness: number; hue: number; blur: number; sepia: number; invert: number; grayscale: number };
 const DEFAULT: Adj = { brightness: 100, contrast: 100, saturate: 100, sharpness: 0, hue: 0, blur: 0, sepia: 0, invert: 0, grayscale: 0 };
@@ -264,6 +266,8 @@ export function ImageEditor({ open, onOpenChange }: { open: boolean; onOpenChang
       const r = await aiEdit({ data: { imageBase64: b64, mimeType: "image/png", prompt: prompt.trim() || "enhance", mode } });
       if (!r.ok) { setErr("edit failed"); return; }
       await loadFromDataUrl(r.dataUrl);
+      if (user) await addLibraryItem({ kind: "image", title: prompt.trim() || name, url: r.dataUrl }, user.id)
+        .catch(() => toast.error(ar ? "تعذر حفظ الصورة في المكتبة." : "Could not save image to the library."));
       setPrompt("");
     } catch (e) { setErr((e as Error).message); }
     finally { setBusy(false); }
@@ -292,6 +296,8 @@ export function ImageEditor({ open, onOpenChange }: { open: boolean; onOpenChang
       a.download = `${name}-zvw${tag}.png`;
       a.click();
       URL.revokeObjectURL(url);
+      if (user) await addLibraryItem({ kind: "image", title: `${name}${tag}`, url: out.toDataURL("image/png") }, user.id)
+        .catch(() => toast.error(ar ? "تعذر حفظ الصورة في المكتبة." : "Could not save image to the library."));
       if (!user) bumpAnon("img");
     } finally { setBusy(false); }
   };

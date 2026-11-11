@@ -12,6 +12,8 @@ import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { MessageContent } from "@/components/MessageContent";
 import { useServerFn } from "@tanstack/react-start";
 import { chatStream } from "@/lib/chat.functions";
+import { saveGeneratedContent } from "@/lib/library";
+import { toast } from "sonner";
 
 type GMsg = {
   id: string;
@@ -134,6 +136,7 @@ export function GroupChat() {
           if (c?.delta) acc += c.delta;
         }
         if (acc) {
+          await saveGeneratedContent(acc, content, user.id).catch(() => toast.error(ar ? "تعذر حفظ المحتوى في المكتبة." : "Could not save content to the library."));
           await supabase.from("group_messages").insert({
             content: acc,
             user_id: user.id,
