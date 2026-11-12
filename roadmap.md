@@ -6,4 +6,4 @@
 # Initials avatars
 - [x] Add deterministic reusable initials and guest badges in the header and user messages.
 - [x] Add local color and icon choices to the existing appearance panel only.
-- [ ] Verify initials rules, signed-in settings, messages and mobile layout.
+- [x] Verify initials rules, signed-in settings, messages and mobile layout.
