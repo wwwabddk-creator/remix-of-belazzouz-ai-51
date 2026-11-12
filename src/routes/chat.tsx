@@ -17,7 +17,8 @@ import { chatStream } from "@/lib/chat.functions";
 import { webSearch, type WebSearchResult } from "@/lib/search.functions";
 import { aiImageGenerate } from "@/lib/imagegen.functions";
 import { aiImageEdit } from "@/lib/image.functions";
-import { Crown, Languages, Paintbrush, LogOut, Send, Square, Menu } from "lucide-react";
+import { Crown, Languages, LogOut, Send, Square, Menu } from "lucide-react";
+import { UserAvatar, AvatarSettings } from "@/components/UserAvatar";
 import { ColorCustomizer } from "@/components/ColorCustomizer";
 import { PersonaInput } from "@/components/PersonaInput";
 import { GroupChat } from "@/components/GroupChat";
@@ -316,7 +317,7 @@ function ChatPage() {
         </div>
         <div className="flex items-center gap-1">
           {isSuperAdmin && <span className="me-2 rounded-full bg-[color:var(--vip)]/20 px-2 py-0.5 text-xs font-medium text-[color:var(--vip)]">{t.superAdmin}</span>}
-          <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => setShowCustom((s) => !s)} title="Theme"><Paintbrush className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => setShowCustom((s) => !s)} title={lang === "ar" ? "إعدادات الملف الشخصي" : "Profile settings"} aria-label={lang === "ar" ? "إعدادات الملف الشخصي" : "Profile settings"} aria-expanded={showCustom}><UserAvatar user={user} /></Button>
           <Button variant="ghost" size="icon" className="h-11 w-11" onClick={reset} title={t.reset}>↺</Button>
           <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => setLang(lang === "en" ? "ar" : "en")}><Languages className="h-5 w-5" /></Button>
           <Button variant="ghost" size="icon" className="h-11 w-11 text-[color:var(--vip)]" onClick={() => setShowVip(true)} title={t.vip}><Crown className="h-5 w-5" /></Button>
@@ -326,6 +327,7 @@ function ChatPage() {
 
       {showCustom && (
         <div className="border-b border-border bg-card/30 p-4 space-y-4">
+          <AvatarSettings user={user} lang={lang} />
           <ColorCustomizer />
           <PersonaInput />
         </div>
@@ -347,7 +349,7 @@ function ChatPage() {
                 </div>
               )}
               {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div key={i} className={`flex items-end gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-base ${m.role === "user" ? "brand-gradient text-primary-foreground" : "bg-card text-card-foreground"}`}>
                     {m.content?.startsWith("__audio__:")
                       ? <audio src={m.content.slice(10)} controls className="h-10" />
@@ -370,6 +372,7 @@ function ChatPage() {
                       </div>
                     )}
                   </div>
+                  {m.role === "user" && <UserAvatar user={user} />}
                 </div>
               ))}
               <div ref={bottomRef} />
