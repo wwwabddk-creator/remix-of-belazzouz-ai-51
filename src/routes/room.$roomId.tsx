@@ -13,6 +13,7 @@ import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { roomAiReply } from "@/lib/room.functions";
 import { saveGeneratedContent } from "@/lib/library";
 import { toast } from "sonner";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export const Route = createFileRoute("/room/$roomId")({
   head: () => ({ meta: [
@@ -221,7 +222,8 @@ function RoomPage() {
             const mine = m.user_id === user.id;
             const ai = m.role === "assistant";
             return (
-              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+              <div key={m.id} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
+                {!mine && !ai && <UserAvatar user={m.user_id ? { id: m.user_id, user_metadata: { full_name: m.display_name } } : null} />}
                 <div
                   className={`max-w-[82%] rounded-2xl px-4 py-2 ${
                     mine
@@ -239,6 +241,7 @@ function RoomPage() {
                   )}
                   {Array.isArray(m.attachments) && m.attachments.map((a, i) => <AttachmentPreview key={i} att={a} />)}
                 </div>
+                {mine && !ai && <UserAvatar user={user} />}
               </div>
             );
           })}

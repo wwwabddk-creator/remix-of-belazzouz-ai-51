@@ -14,6 +14,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { chatStream } from "@/lib/chat.functions";
 import { saveGeneratedContent } from "@/lib/library";
 import { toast } from "sonner";
+import { UserAvatar } from "@/components/UserAvatar";
 
 type GMsg = {
   id: string;
@@ -190,7 +191,8 @@ export function GroupChat() {
           {msgs.map((m) => {
             const mine = m.user_id === user?.id;
             return (
-              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+              <div key={m.id} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
+                {!mine && m.display_name !== "🤖 AI" && <UserAvatar user={{ id: m.user_id, user_metadata: { full_name: m.display_name } }} />}
                 <div className={`max-w-[80%] rounded-2xl px-4 py-2 ${mine ? "brand-gradient text-primary-foreground" : "bg-card"}`}>
                   <p className="text-xs opacity-70">{m.display_name || "User"}</p>
                   {m.audio_url ? (
@@ -199,6 +201,7 @@ export function GroupChat() {
                     <MessageContent content={m.content} role={mine ? "user" : "assistant"} lang={lang} />
                   )}
                 </div>
+                {mine && m.display_name !== "🤖 AI" && <UserAvatar user={user} />}
               </div>
             );
           })}
