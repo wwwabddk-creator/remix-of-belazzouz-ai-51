@@ -9,8 +9,8 @@ describe("initials avatars", () => {
     expect(avatarIdentity({ email: "wasim@example.com", user_metadata: { full_name: " " } }).initials).toBe("WA");
   });
   it("assigns a concrete repeatable color independent of account ID", () => {
-    expect(avatarIdentity({ id: "one", email: "wasim@example.com" }).color).toBe("vip");
-    expect(avatarIdentity({ id: "two", email: "wasim@example.com" }).color).toBe("vip");
+    expect(avatarIdentity({ id: "one", email: "wasim@example.com" }).color).toBe("secondary");
+    expect(avatarIdentity({ id: "two", email: "wasim@example.com" }).color).toBe("secondary");
   });
   it("always displays G for absent or anonymous users", () => {
     expect(avatarIdentity(null).initials).toBe("G");
