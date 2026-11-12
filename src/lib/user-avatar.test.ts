@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { avatarIdentity, parseAvatarPreference } from "./user-avatar";
 
 describe("initials avatars", () => {
+  it("persists JPEG photos and rejects remote photo URLs", () => {
+    expect(parseAvatarPreference('{"photo":"data:image/jpeg;base64,YQ=="}').photo).toBe("data:image/jpeg;base64,YQ==");
+    expect(parseAvatarPreference('{"photo":"https://example.com/photo.jpg"}').photo).toBeUndefined();
+  });
   it("uses the first two uppercase characters of full_name ahead of email", () => {
     expect(avatarIdentity({ email: "other@example.com", user_metadata: { full_name: "  Alice Smith  " } }).initials).toBe("AL");
   });

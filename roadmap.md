@@ -7,3 +7,8 @@
 - [x] Add deterministic reusable initials and guest badges in the header and user messages.
 - [x] Add local color and icon choices to the existing appearance panel only.
 - [x] Verify initials rules, signed-in settings, messages and mobile layout.
+
+# Local avatar photos
+- [x] Add upload, circular canvas crop, zoom and positioning inside Avatar settings.
+- [x] Save compressed 150px JPEGs locally and support removing photos.
+- [x] Test crop rules and verify upload, positioning, save, persistence and removal.

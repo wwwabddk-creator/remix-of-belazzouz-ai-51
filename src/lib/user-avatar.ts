@@ -14,7 +14,7 @@ export const AVATAR_COLORS = {
 
 export type AvatarColor = keyof typeof AVATAR_COLORS;
 export type AvatarIcon = "initials" | "user" | "star";
-export type AvatarPreference = { color?: AvatarColor; icon?: AvatarIcon };
+export type AvatarPreference = { color?: AvatarColor; icon?: AvatarIcon; photo?: string };
 
 export function avatarIdentity(user?: AvatarUser | null) {
   if (!user || user.is_anonymous) return { initials: "G", color: "secondary" as AvatarColor, guest: true };
@@ -32,9 +32,11 @@ export function parseAvatarPreference(value: string | null): AvatarPreference {
     const parsed: unknown = JSON.parse(value || "{}");
     if (!parsed || typeof parsed !== "object") return {};
     const record = parsed as Record<string, unknown>;
-    return {
+    const preference: AvatarPreference = {
       color: typeof record.color === "string" && Object.hasOwn(AVATAR_COLORS, record.color) ? record.color as AvatarColor : undefined,
       icon: record.icon === "user" || record.icon === "star" || record.icon === "initials" ? record.icon : undefined,
     };
+    if (typeof record.photo === "string" && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(record.photo)) preference.photo = record.photo;
+    return preference;
   } catch { return {}; }
 }
