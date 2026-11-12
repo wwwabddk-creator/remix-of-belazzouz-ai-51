@@ -11,4 +11,4 @@
 # Local avatar photos
 - [x] Add upload, circular canvas crop, zoom and positioning inside Avatar settings.
 - [x] Save compressed 150px JPEGs locally and support removing photos.
-- [ ] Test crop rules and verify upload, positioning, save, persistence and removal.
+- [x] Test crop rules and verify upload, positioning, save, persistence and removal.
