@@ -243,13 +243,14 @@ function ChatPage() {
       const mem = readMemory();
       const personaWithMem = [
         persona || "",
+        isVip ? `\n\n${toneInstruction(tone)}` : "",
         mem.length
           ? (lang === "ar"
               ? `\n\nذكريات المستخدم المحفوظة محلياً (استخدمها لتخصيص الإجابة):\n- ${mem.join("\n- ")}`
               : `\n\nUser's saved memories (use them to personalize):\n- ${mem.join("\n- ")}`)
           : "",
       ].join("").trim();
-      const iter = (await streamFn({ data: { messages: next, lang, mode, persona: personaWithMem || undefined, webContext: search.summary || undefined, webConfidence: (search as { confidence?: number }).confidence, webProviders: (search as { providersUsed?: string[] }).providersUsed } })) as AsyncIterable<{ delta?: string }>;
+      const iter = (await streamFn({ data: { messages: next, lang, mode, persona: personaWithMem ? personaWithMem.slice(0, 500) : undefined, webContext: search.summary || undefined, webConfidence: (search as { confidence?: number }).confidence, webProviders: (search as { providersUsed?: string[] }).providersUsed } })) as AsyncIterable<{ delta?: string }>;
       let acc = "";
       for await (const chunk of iter) {
         if (abortRef.current?.signal.aborted) break;
@@ -323,6 +324,7 @@ function ChatPage() {
                   refreshKey={historyKey}
                   onSelect={loadConversation}
                   onNew={newChat}
+                  isVip={isVip}
                 />
               </div>
             </SheetContent>
@@ -343,7 +345,7 @@ function ChatPage() {
         <div className="border-b border-border bg-card/30 p-4 space-y-4">
           <AvatarSettings user={user} lang={lang} />
           <ColorCustomizer />
-          <PersonaInput />
+          <PersonaInput isVip={isVip} />
         </div>
       )}
 
@@ -451,14 +453,16 @@ function ChatPage() {
         </Tabs>
       </main>
       
-      <VipModal open={showVip} onOpenChange={setShowVip} />
+      <VipModal open={showVip} onOpenChange={setShowVip} isVip={isVip} />
       <VoiceCallModal
         open={showCall}
         onOpenChange={setShowCall}
         lang={lang}
         onAsk={async (text) => {
           try {
-            const iter = (await streamFn({ data: { messages: [{ role: "user", content: text }], lang, mode: "fast" } })) as AsyncIterable<{ delta?: string }>;
+            const quota = await consumeUserMessage(user);
+            if (!quota.allowed) return quotaMessage(lang, user.is_anonymous === true);
+            const iter = (await streamFn({ data: { messages: [{ role: "user", content: text }], lang, mode: "fast", persona: isVip ? toneInstruction(tone) : undefined } })) as AsyncIterable<{ delta?: string }>;
             let acc = "";
             for await (const c of iter) acc += c?.delta || "";
             return acc || (lang === "ar" ? "نعم؟" : "Yes?");

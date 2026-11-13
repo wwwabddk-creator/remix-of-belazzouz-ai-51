@@ -153,6 +153,11 @@ export function ChatHistorySidebar({
           <Button onClick={onNew} variant="outline" className="h-11 w-full justify-center gap-2">
             <Plus className="h-4 w-4" /> {t.newChat}
           </Button>
+          {isVip && (
+            <Button onClick={exportHistory} variant="outline" className="h-11 w-full justify-center gap-2">
+              <Download className="h-4 w-4" /> {lang === "ar" ? "تصدير السجل الكامل" : "Export full history"}
+            </Button>
+          )}
           <div className="-mx-1 mt-1 flex-1 overflow-y-auto px-1">
             {items.length === 0 && <p className="px-2 py-4 text-xs text-muted-foreground">—</p>}
             {items.map((c) => (
