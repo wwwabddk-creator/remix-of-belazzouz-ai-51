@@ -54,6 +54,7 @@ function ChatPage() {
   const [showCall, setShowCall] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
   const [showVip, setShowVip] = useState(false);
+  const [isVip, setIsVip] = useState(false);
   const [convId, setConvId] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -66,12 +67,16 @@ function ChatPage() {
   const [mode, setMode] = useState<"fast" | "deep" | "hybrid">("hybrid");
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const isSubscriber = isSuperAdmin;
+  const isSubscriber = isSuperAdmin || isVip;
   const libraryError = () => toast.error(lang === "ar" ? "تعذر حفظ المحتوى في المكتبة." : "Could not save content to the library.");
 
 
   useEffect(() => { if (!loading && !user) nav({ to: "/" }); }, [loading, user, nav]);
 
+  useEffect(() => {
+    if (!user) { setIsVip(false); return; }
+    readVipStatus(user).then(setIsVip).catch(() => setIsVip(false));
+  }, [user]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -92,6 +97,18 @@ function ChatPage() {
     if ((!input.trim() && pending.length === 0) || busy) return;
     const q = input.trim();
     const atts = pending;
+    if (!user) return;
+    try {
+      const quota = await consumeUserMessage(user);
+      if (!quota.allowed) {
+        toast.warning(quotaMessage(lang, user.is_anonymous === true));
+        return;
+      }
+      if (quota.is_vip) setIsVip(true);
+    } catch {
+      toast.error(lang === "ar" ? "تعذر التحقق من رصيد الرسائل." : "Could not verify your message allowance.");
+      return;
+    }
 
     // Memory commands (client-side)
     const memCmd = q ? parseMemoryCommand(q) : null;
@@ -179,10 +196,6 @@ function ChatPage() {
 
     // Explicit /image trigger (kept for power users)
     const genMatch = q.match(/^\/(image|img|صورة)\s+([\s\S]+)/i);
-
-    // Daily limit + throttle (currently always ok)
-    const gate = checkAndConsume(genMatch ? "image" : "text", lang);
-    if (!gate.ok) { toast.warning(gate.reason); return; }
 
     const userMsg: Msg = { role: "user", content: q || (atts.length ? `📎 ${atts.length} file(s)` : ""), attachments: atts.length ? atts : undefined };
     const next = [...messages, userMsg];

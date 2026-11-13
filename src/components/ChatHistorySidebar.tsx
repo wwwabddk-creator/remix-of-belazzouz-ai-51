@@ -87,6 +87,26 @@ export function ChatHistorySidebar({
     await supabase.from("conversations").delete().eq("user_id", user.id);
     onNew(); load();
   };
+  const exportHistory = async () => {
+    if (!user || !isVip) return;
+    const [{ data: conversations }, { data: messages }] = await Promise.all([
+      supabase.from("conversations").select("id,title,created_at,updated_at").eq("user_id", user.id).order("created_at", { ascending: true }),
+      supabase.from("messages").select("conversation_id,role,content,created_at").eq("user_id", user.id).order("created_at", { ascending: true }),
+    ]);
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      conversations: (conversations || []).map((conversation) => ({
+        ...conversation,
+        messages: (messages || []).filter((message) => message.conversation_id === conversation.id),
+      })),
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `belazo-chat-history-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
   const removeLib = async (id: string) => {
     if (!user) return;
     try { await removeLibraryItem(id, user.id); }
