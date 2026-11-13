@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import type { AiTone } from "@/lib/freemium";
 
 export type ThemeConfig = { colors: string[]; mode: "solid" | "gradient" };
 
@@ -52,6 +53,7 @@ type Ctx = {
   theme: ThemeConfig; setTheme: (t: ThemeConfig) => void; reset: () => void;
   lang: "en" | "ar"; setLang: (l: "en" | "ar") => void;
   persona: string; setPersona: (p: string) => void;
+  tone: AiTone; setTone: (tone: AiTone) => void;
 };
 
 const AppPrefsCtx = createContext<Ctx | null>(null);
@@ -69,6 +71,11 @@ export function AppPrefsProvider({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return "";
     return localStorage.getItem("vib_persona") || "";
   });
+  const [tone, setToneState] = useState<AiTone>(() => {
+    if (typeof window === "undefined") return "casual";
+    const saved = localStorage.getItem("vib_tone");
+    return saved === "formal" || saved === "concise" || saved === "detailed" ? saved : "casual";
+  });
 
   useEffect(() => { applyTheme(theme); }, [theme]);
   useEffect(() => {
@@ -80,10 +87,11 @@ export function AppPrefsProvider({ children }: { children: ReactNode }) {
   const setTheme = (t: ThemeConfig) => { setThemeState(t); try { localStorage.setItem("vib_theme", JSON.stringify(t)); } catch {} };
   const setLang = (l: "en" | "ar") => { setLangState(l); localStorage.setItem("vib_lang", l); };
   const setPersona = (p: string) => { setPersonaState(p); localStorage.setItem("vib_persona", p); };
+  const setTone = (value: AiTone) => { setToneState(value); localStorage.setItem("vib_tone", value); };
   const reset = () => setTheme(DEFAULT);
 
   return (
-    <AppPrefsCtx.Provider value={{ theme, setTheme, reset, lang, setLang, persona, setPersona }}>
+    <AppPrefsCtx.Provider value={{ theme, setTheme, reset, lang, setLang, persona, setPersona, tone, setTone }}>
       {children}
     </AppPrefsCtx.Provider>
   );

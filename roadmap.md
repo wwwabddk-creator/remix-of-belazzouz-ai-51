@@ -12,3 +12,10 @@
 - [x] Add upload, circular canvas crop, zoom and positioning inside Avatar settings.
 - [x] Save compressed 150px JPEGs locally and support removing photos.
 - [x] Test crop rules and verify upload, positioning, save, persistence and removal.
+
+# Freemium and VIP personalization
+- [ ] Add protected VIP and daily-usage profile fields with atomic daily quota handling.
+- [ ] Enforce five total guest messages and 25 daily registered-user messages, with VIP bypass.
+- [ ] Add one free persona, unlimited VIP personas, and VIP tone selection in existing settings.
+- [ ] Connect the existing crown to the three-perk VIP modal and add history export for VIP.
+- [ ] Test quota/persona rules and verify the signed-in chat and settings flow.

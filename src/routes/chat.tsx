@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { checkAndConsume, isUnsafePrompt, safetyRefusal, parseMemoryCommand, rememberFact, forgetFact, readMemory } from "@/lib/client-limits";
+import { isUnsafePrompt, safetyRefusal, parseMemoryCommand, rememberFact, forgetFact, readMemory } from "@/lib/client-limits";
 import { addLibraryItem, saveGeneratedContent } from "@/lib/library";
+import { consumeUserMessage, quotaMessage, readVipStatus, toneInstruction } from "@/lib/freemium";
 
 import { supabase } from "@/integrations/supabase/client";
 import { chatStream } from "@/lib/chat.functions";
@@ -45,7 +46,7 @@ type Msg = { role: "user" | "assistant"; content: string; sources?: WebSearchRes
 function ChatPage() {
   const { user, loading, isSuperAdmin } = useAuth();
   const nav = useNavigate();
-  const { lang, setLang, reset, persona } = useAppPrefs();
+  const { lang, setLang, reset, persona, tone } = useAppPrefs();
   const t = T[lang];
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -53,6 +54,7 @@ function ChatPage() {
   const [showCall, setShowCall] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
   const [showVip, setShowVip] = useState(false);
+  const [isVip, setIsVip] = useState(false);
   const [convId, setConvId] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -65,12 +67,16 @@ function ChatPage() {
   const [mode, setMode] = useState<"fast" | "deep" | "hybrid">("hybrid");
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const isSubscriber = isSuperAdmin;
+  const isSubscriber = isSuperAdmin || isVip;
   const libraryError = () => toast.error(lang === "ar" ? "تعذر حفظ المحتوى في المكتبة." : "Could not save content to the library.");
 
 
   useEffect(() => { if (!loading && !user) nav({ to: "/" }); }, [loading, user, nav]);
 
+  useEffect(() => {
+    if (!user) { setIsVip(false); return; }
+    readVipStatus(user).then(setIsVip).catch(() => setIsVip(false));
+  }, [user]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
@@ -91,6 +97,18 @@ function ChatPage() {
     if ((!input.trim() && pending.length === 0) || busy) return;
     const q = input.trim();
     const atts = pending;
+    if (!user) return;
+    try {
+      const quota = await consumeUserMessage(user);
+      if (!quota.allowed) {
+        toast.warning(quotaMessage(lang, user.is_anonymous === true));
+        return;
+      }
+      if (quota.is_vip) setIsVip(true);
+    } catch {
+      toast.error(lang === "ar" ? "تعذر التحقق من رصيد الرسائل." : "Could not verify your message allowance.");
+      return;
+    }
 
     // Memory commands (client-side)
     const memCmd = q ? parseMemoryCommand(q) : null;
@@ -179,10 +197,6 @@ function ChatPage() {
     // Explicit /image trigger (kept for power users)
     const genMatch = q.match(/^\/(image|img|صورة)\s+([\s\S]+)/i);
 
-    // Daily limit + throttle (currently always ok)
-    const gate = checkAndConsume(genMatch ? "image" : "text", lang);
-    if (!gate.ok) { toast.warning(gate.reason); return; }
-
     const userMsg: Msg = { role: "user", content: q || (atts.length ? `📎 ${atts.length} file(s)` : ""), attachments: atts.length ? atts : undefined };
     const next = [...messages, userMsg];
 
@@ -229,13 +243,14 @@ function ChatPage() {
       const mem = readMemory();
       const personaWithMem = [
         persona || "",
+        isVip ? `\n\n${toneInstruction(tone)}` : "",
         mem.length
           ? (lang === "ar"
               ? `\n\nذكريات المستخدم المحفوظة محلياً (استخدمها لتخصيص الإجابة):\n- ${mem.join("\n- ")}`
               : `\n\nUser's saved memories (use them to personalize):\n- ${mem.join("\n- ")}`)
           : "",
       ].join("").trim();
-      const iter = (await streamFn({ data: { messages: next, lang, mode, persona: personaWithMem || undefined, webContext: search.summary || undefined, webConfidence: (search as { confidence?: number }).confidence, webProviders: (search as { providersUsed?: string[] }).providersUsed } })) as AsyncIterable<{ delta?: string }>;
+      const iter = (await streamFn({ data: { messages: next, lang, mode, persona: personaWithMem ? personaWithMem.slice(0, 500) : undefined, webContext: search.summary || undefined, webConfidence: (search as { confidence?: number }).confidence, webProviders: (search as { providersUsed?: string[] }).providersUsed } })) as AsyncIterable<{ delta?: string }>;
       let acc = "";
       for await (const chunk of iter) {
         if (abortRef.current?.signal.aborted) break;
@@ -309,6 +324,7 @@ function ChatPage() {
                   refreshKey={historyKey}
                   onSelect={loadConversation}
                   onNew={newChat}
+                  isVip={isVip}
                 />
               </div>
             </SheetContent>
@@ -329,7 +345,7 @@ function ChatPage() {
         <div className="border-b border-border bg-card/30 p-4 space-y-4">
           <AvatarSettings user={user} lang={lang} />
           <ColorCustomizer />
-          <PersonaInput />
+          <PersonaInput isVip={isVip} />
         </div>
       )}
 
@@ -437,14 +453,16 @@ function ChatPage() {
         </Tabs>
       </main>
       
-      <VipModal open={showVip} onOpenChange={setShowVip} />
+      <VipModal open={showVip} onOpenChange={setShowVip} isVip={isVip} />
       <VoiceCallModal
         open={showCall}
         onOpenChange={setShowCall}
         lang={lang}
         onAsk={async (text) => {
           try {
-            const iter = (await streamFn({ data: { messages: [{ role: "user", content: text }], lang, mode: "fast" } })) as AsyncIterable<{ delta?: string }>;
+            const quota = await consumeUserMessage(user);
+            if (!quota.allowed) return quotaMessage(lang, user.is_anonymous === true);
+            const iter = (await streamFn({ data: { messages: [{ role: "user", content: text }], lang, mode: "fast", persona: isVip ? toneInstruction(tone) : undefined } })) as AsyncIterable<{ delta?: string }>;
             let acc = "";
             for await (const c of iter) acc += c?.delta || "";
             return acc || (lang === "ar" ? "نعم؟" : "Yes?");

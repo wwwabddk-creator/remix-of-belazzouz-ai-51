@@ -60,7 +60,7 @@ function Landing() {
           <PersonaInput />
         </div>
       </div>
-      <VipModal open={showVip} onOpenChange={setShowVip} />
+      <VipModal open={showVip} onOpenChange={setShowVip} isVip={false} />
     </main>
   );
 }

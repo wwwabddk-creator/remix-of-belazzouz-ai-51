@@ -14,6 +14,7 @@ import { roomAiReply } from "@/lib/room.functions";
 import { saveGeneratedContent } from "@/lib/library";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
+import { consumeUserMessage, quotaMessage } from "@/lib/freemium";
 
 export const Route = createFileRoute("/room/$roomId")({
   head: () => ({ meta: [
@@ -144,6 +145,12 @@ function RoomPage() {
     if (!content && !pending) return;
     setSending(true);
     try {
+      if (!user) return;
+      const quota = await consumeUserMessage(user);
+      if (!quota.allowed) {
+        toast.warning(quotaMessage(lang, user.is_anonymous === true));
+        return;
+      }
       const payload: Partial<RMsg> = {};
       if (pending) payload.attachments = [pending];
       await insertMsg(content || (pending ? `📎 ${pending.name}` : ""), payload);

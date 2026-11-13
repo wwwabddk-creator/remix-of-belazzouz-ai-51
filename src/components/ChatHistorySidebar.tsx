@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, MessageSquare, MoreVertical, Pencil, BookMarked, Brain, Image as ImageIcon, Code, FileText } from "lucide-react";
+import { Trash2, Plus, MessageSquare, MoreVertical, Pencil, BookMarked, Brain, Image as ImageIcon, Code, FileText, Download } from "lucide-react";
 import { useAppPrefs } from "@/lib/app-prefs";
 import { T } from "@/lib/i18n";
 import {
@@ -21,12 +21,13 @@ export type Conv = { id: string; title: string; updated_at: string };
 export { addLibraryItem } from "@/lib/client-limits";
 
 export function ChatHistorySidebar({
-  activeId, onSelect, onNew, refreshKey,
+  activeId, onSelect, onNew, refreshKey, isVip = false,
 }: {
   activeId: string | null;
   onSelect: (id: string) => void;
   onNew: () => void;
   refreshKey: number;
+  isVip?: boolean;
 }) {
   const { user } = useAuth();
   const { lang } = useAppPrefs();
@@ -86,6 +87,26 @@ export function ChatHistorySidebar({
     await supabase.from("conversations").delete().eq("user_id", user.id);
     onNew(); load();
   };
+  const exportHistory = async () => {
+    if (!user || !isVip) return;
+    const [{ data: conversations }, { data: messages }] = await Promise.all([
+      supabase.from("conversations").select("id,title,created_at,updated_at").eq("user_id", user.id).order("created_at", { ascending: true }),
+      supabase.from("messages").select("conversation_id,role,content,created_at").eq("user_id", user.id).order("created_at", { ascending: true }),
+    ]);
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      conversations: (conversations || []).map((conversation) => ({
+        ...conversation,
+        messages: (messages || []).filter((message) => message.conversation_id === conversation.id),
+      })),
+    };
+    const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `belazo-chat-history-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
   const removeLib = async (id: string) => {
     if (!user) return;
     try { await removeLibraryItem(id, user.id); }
@@ -132,6 +153,11 @@ export function ChatHistorySidebar({
           <Button onClick={onNew} variant="outline" className="h-11 w-full justify-center gap-2">
             <Plus className="h-4 w-4" /> {t.newChat}
           </Button>
+          {isVip && (
+            <Button onClick={exportHistory} variant="outline" className="h-11 w-full justify-center gap-2">
+              <Download className="h-4 w-4" /> {lang === "ar" ? "تصدير السجل الكامل" : "Export full history"}
+            </Button>
+          )}
           <div className="-mx-1 mt-1 flex-1 overflow-y-auto px-1">
             {items.length === 0 && <p className="px-2 py-4 text-xs text-muted-foreground">—</p>}
             {items.map((c) => (

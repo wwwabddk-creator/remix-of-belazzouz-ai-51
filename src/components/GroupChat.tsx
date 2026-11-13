@@ -15,6 +15,7 @@ import { chatStream } from "@/lib/chat.functions";
 import { saveGeneratedContent } from "@/lib/library";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
+import { consumeUserMessage, quotaMessage } from "@/lib/freemium";
 
 type GMsg = {
   id: string;
@@ -102,6 +103,19 @@ export function GroupChat() {
 
   const send = async () => {
     if ((!input.trim() && !pending) || !user || sending) return;
+    setSending(true);
+    try {
+      const quota = await consumeUserMessage(user);
+      if (!quota.allowed) {
+        toast.warning(quotaMessage(lang, user.is_anonymous === true));
+        return;
+      }
+    } catch {
+      toast.error(ar ? "تعذر التحقق من رصيد الرسائل." : "Could not verify your message allowance.");
+      return;
+    } finally {
+      setSending(false);
+    }
     setSending(true);
     const content = input.trim() || (pending ? `📎 ${pending.name}` : "");
     setInput("");
