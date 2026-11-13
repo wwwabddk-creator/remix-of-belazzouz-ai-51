@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import type { AiTone } from "@/lib/freemium";
 
 export type ThemeConfig = { colors: string[]; mode: "solid" | "gradient" };
 

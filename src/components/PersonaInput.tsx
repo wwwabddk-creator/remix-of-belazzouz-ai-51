@@ -83,7 +83,7 @@ export function PersonaInput({ isVip = false }: { isVip?: boolean }) {
       )}
       <Textarea
         value={persona}
-        onChange={(e) => { setPersona(e.target.value); if (isVip) setActiveId(null); }}
+        onChange={(e) => setPersona(e.target.value)}
         placeholder={t.personaPh}
         maxLength={500}
         rows={3}
