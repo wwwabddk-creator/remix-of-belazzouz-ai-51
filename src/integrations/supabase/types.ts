@@ -178,10 +178,13 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          daily_messages_count: number
           display_name: string | null
           email: string | null
           id: string
+          is_vip: boolean
           lang_pref: string
+          last_message_date: string | null
           persona: string | null
           theme_config: Json | null
           voice_pref: string
@@ -189,10 +192,13 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          daily_messages_count?: number
           display_name?: string | null
           email?: string | null
           id: string
+          is_vip?: boolean
           lang_pref?: string
+          last_message_date?: string | null
           persona?: string | null
           theme_config?: Json | null
           voice_pref?: string
@@ -200,10 +206,13 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          daily_messages_count?: number
           display_name?: string | null
           email?: string | null
           id?: string
+          is_vip?: boolean
           lang_pref?: string
+          last_message_date?: string | null
           persona?: string | null
           theme_config?: Json | null
           voice_pref?: string
@@ -272,6 +281,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_daily_message: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
