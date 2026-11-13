@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Copy, Check, Volume2, VolumeX, MoreHorizontal, ThumbsUp, ThumbsDown, Maximize2, Minimize2, Mic } from "lucide-react";
+import { useState } from "react";
+import { Copy, Check, Volume2, VolumeX, MoreHorizontal, ThumbsUp, ThumbsDown, Maximize2, Minimize2 } from "lucide-react";
 import { formatForRender } from "@/lib/format";
 import {
   DropdownMenu,
@@ -7,26 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
 
-const VOICE_KEY = "belazzouz.voice";
-
-function getVoices(): SpeechSynthesisVoice[] {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return [];
-  return window.speechSynthesis.getVoices();
-}
-
 function pickDefaultVoice(targetLang: string): SpeechSynthesisVoice | null {
-  const voices = getVoices();
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
+  const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return null;
-  const saved = localStorage.getItem(VOICE_KEY);
-  if (saved) {
-    const v = voices.find((x) => x.name === saved);
-    if (v) return v;
-  }
   const langPrefix = targetLang.slice(0, 2);
   const malePatterns = /(male|david|alex|fred|aaron|daniel|tom|george|james|majed|hamed|hamza|naayf|naayef|deep|bass)/i;
   const femalePatterns = /(female|samantha|victoria|karen|tessa|monica|paulina|laila|maha|hala|amira|zira)/i;
@@ -87,16 +75,7 @@ export function MessageContent({
   const [copied, setCopied] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [vote, setVote] = useState<"up" | "down" | null>(null);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const parts = splitFences(content);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    const sync = () => setVoices(getVoices());
-    sync();
-    window.speechSynthesis.onvoiceschanged = sync;
-    return () => { window.speechSynthesis.onvoiceschanged = null; };
-  }, []);
 
   const copy = async () => {
     try { await navigator.clipboard.writeText(content); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {/* ignore */}
@@ -109,11 +88,6 @@ export function MessageContent({
     const tick = setInterval(() => {
       if (!window.speechSynthesis.speaking) { setSpeaking(false); clearInterval(tick); }
     }, 350);
-  };
-
-  const pickVoice = (name: string) => {
-    localStorage.setItem(VOICE_KEY, name);
-    toast.success(lang === "ar" ? "تم اختيار الصوت" : "Voice selected");
   };
 
   return (
@@ -144,24 +118,6 @@ export function MessageContent({
             <button type="button" onClick={toggleSpeak} aria-label="Speak" className="rounded-md p-1 hover:bg-background/40" title={speaking ? "Stop" : "Speak"}>
               {speaking ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
             </button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button type="button" className="rounded-md p-1 hover:bg-background/40" title={lang === "ar" ? "اختر الصوت" : "Choose voice"}>
-                  <Mic className="h-3.5 w-3.5" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="max-h-72 w-56 overflow-y-auto">
-                <DropdownMenuLabel>{lang === "ar" ? "الأصوات المتاحة" : "Available voices"}</DropdownMenuLabel>
-                {voices.length === 0 && (
-                  <DropdownMenuItem disabled>{lang === "ar" ? "لا توجد أصوات" : "No voices"}</DropdownMenuItem>
-                )}
-                {voices.slice(0, 24).map((v) => (
-                  <DropdownMenuItem key={v.name} onClick={() => pickVoice(v.name)}>
-                    {v.name} <span className="ms-2 text-xs opacity-50">{v.lang}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button type="button" className="rounded-md p-1 hover:bg-background/40" title="More" aria-label="More options">
