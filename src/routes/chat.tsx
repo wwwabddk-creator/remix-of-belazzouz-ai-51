@@ -46,7 +46,7 @@ type Msg = { role: "user" | "assistant"; content: string; sources?: WebSearchRes
 function ChatPage() {
   const { user, loading, isSuperAdmin } = useAuth();
   const nav = useNavigate();
-  const { lang, setLang, reset, persona } = useAppPrefs();
+  const { lang, setLang, reset, persona, tone } = useAppPrefs();
   const t = T[lang];
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");

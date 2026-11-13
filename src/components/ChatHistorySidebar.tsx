@@ -21,12 +21,13 @@ export type Conv = { id: string; title: string; updated_at: string };
 export { addLibraryItem } from "@/lib/client-limits";
 
 export function ChatHistorySidebar({
-  activeId, onSelect, onNew, refreshKey,
+  activeId, onSelect, onNew, refreshKey, isVip = false,
 }: {
   activeId: string | null;
   onSelect: (id: string) => void;
   onNew: () => void;
   refreshKey: number;
+  isVip?: boolean;
 }) {
   const { user } = useAuth();
   const { lang } = useAppPrefs();

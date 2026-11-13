@@ -145,6 +145,12 @@ function RoomPage() {
     if (!content && !pending) return;
     setSending(true);
     try {
+      if (!user) return;
+      const quota = await consumeUserMessage(user);
+      if (!quota.allowed) {
+        toast.warning(quotaMessage(lang, user.is_anonymous === true));
+        return;
+      }
       const payload: Partial<RMsg> = {};
       if (pending) payload.attachments = [pending];
       await insertMsg(content || (pending ? `📎 ${pending.name}` : ""), payload);

@@ -87,10 +87,11 @@ export function AppPrefsProvider({ children }: { children: ReactNode }) {
   const setTheme = (t: ThemeConfig) => { setThemeState(t); try { localStorage.setItem("vib_theme", JSON.stringify(t)); } catch {} };
   const setLang = (l: "en" | "ar") => { setLangState(l); localStorage.setItem("vib_lang", l); };
   const setPersona = (p: string) => { setPersonaState(p); localStorage.setItem("vib_persona", p); };
+  const setTone = (value: AiTone) => { setToneState(value); localStorage.setItem("vib_tone", value); };
   const reset = () => setTheme(DEFAULT);
 
   return (
-    <AppPrefsCtx.Provider value={{ theme, setTheme, reset, lang, setLang, persona, setPersona }}>
+    <AppPrefsCtx.Provider value={{ theme, setTheme, reset, lang, setLang, persona, setPersona, tone, setTone }}>
       {children}
     </AppPrefsCtx.Provider>
   );
