@@ -53,6 +53,7 @@ type Ctx = {
   theme: ThemeConfig; setTheme: (t: ThemeConfig) => void; reset: () => void;
   lang: "en" | "ar"; setLang: (l: "en" | "ar") => void;
   persona: string; setPersona: (p: string) => void;
+  tone: AiTone; setTone: (tone: AiTone) => void;
 };
 
 const AppPrefsCtx = createContext<Ctx | null>(null);
