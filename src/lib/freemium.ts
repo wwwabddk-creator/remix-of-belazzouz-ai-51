@@ -4,7 +4,6 @@ import { GUEST_MESSAGE_LIMIT } from "./freemium-rules";
 
 export { GUEST_MESSAGE_LIMIT, FREE_DAILY_MESSAGE_LIMIT, allowanceFor, toneInstruction } from "./freemium-rules";
 export type { AiTone } from "./freemium-rules";
-import type { AiTone } from "./freemium-rules";
 export type QuotaResult = { allowed: boolean; remaining: number | null; is_vip: boolean };
 
 const guestKey = (userId: string) => `belazzouz.guest-messages.${userId}`;
