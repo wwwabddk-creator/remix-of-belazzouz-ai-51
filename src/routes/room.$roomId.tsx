@@ -14,6 +14,7 @@ import { roomAiReply } from "@/lib/room.functions";
 import { saveGeneratedContent } from "@/lib/library";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
+import { consumeUserMessage, quotaMessage } from "@/lib/freemium";
 
 export const Route = createFileRoute("/room/$roomId")({
   head: () => ({ meta: [

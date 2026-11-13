@@ -15,6 +15,7 @@ import { chatStream } from "@/lib/chat.functions";
 import { saveGeneratedContent } from "@/lib/library";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
+import { consumeUserMessage, quotaMessage } from "@/lib/freemium";
 
 type GMsg = {
   id: string;

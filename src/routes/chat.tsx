@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { checkAndConsume, isUnsafePrompt, safetyRefusal, parseMemoryCommand, rememberFact, forgetFact, readMemory } from "@/lib/client-limits";
+import { isUnsafePrompt, safetyRefusal, parseMemoryCommand, rememberFact, forgetFact, readMemory } from "@/lib/client-limits";
 import { addLibraryItem, saveGeneratedContent } from "@/lib/library";
+import { consumeUserMessage, quotaMessage, readVipStatus, toneInstruction } from "@/lib/freemium";
 
 import { supabase } from "@/integrations/supabase/client";
 import { chatStream } from "@/lib/chat.functions";

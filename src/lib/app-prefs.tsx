@@ -71,6 +71,11 @@ export function AppPrefsProvider({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return "";
     return localStorage.getItem("vib_persona") || "";
   });
+  const [tone, setToneState] = useState<AiTone>(() => {
+    if (typeof window === "undefined") return "casual";
+    const saved = localStorage.getItem("vib_tone");
+    return saved === "formal" || saved === "concise" || saved === "detailed" ? saved : "casual";
+  });
 
   useEffect(() => { applyTheme(theme); }, [theme]);
   useEffect(() => {

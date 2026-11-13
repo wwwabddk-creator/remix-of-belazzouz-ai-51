@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, MessageSquare, MoreVertical, Pencil, BookMarked, Brain, Image as ImageIcon, Code, FileText } from "lucide-react";
+import { Trash2, Plus, MessageSquare, MoreVertical, Pencil, BookMarked, Brain, Image as ImageIcon, Code, FileText, Download } from "lucide-react";
 import { useAppPrefs } from "@/lib/app-prefs";
 import { T } from "@/lib/i18n";
 import {
