@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { GUEST_MESSAGE_LIMIT } from "./freemium-rules";
+import { allowanceFor, GUEST_MESSAGE_LIMIT } from "./freemium-rules";
 
 export { GUEST_MESSAGE_LIMIT, FREE_DAILY_MESSAGE_LIMIT, allowanceFor, toneInstruction } from "./freemium-rules";
 export type { AiTone } from "./freemium-rules";
