@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allowanceFor, GUEST_MESSAGE_LIMIT, FREE_DAILY_MESSAGE_LIMIT, toneInstruction } from "./freemium";
+import { allowanceFor, GUEST_MESSAGE_LIMIT, FREE_DAILY_MESSAGE_LIMIT, toneInstruction } from "./freemium-rules";
 
 describe("freemium rules", () => {
   it("allows exactly five total guest messages", () => {

@@ -1,16 +1,11 @@
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { GUEST_MESSAGE_LIMIT } from "./freemium-rules";
 
-export const GUEST_MESSAGE_LIMIT = 5;
-export const FREE_DAILY_MESSAGE_LIMIT = 25;
-
-export type AiTone = "formal" | "casual" | "concise" | "detailed";
+export { GUEST_MESSAGE_LIMIT, FREE_DAILY_MESSAGE_LIMIT, allowanceFor, toneInstruction } from "./freemium-rules";
+export type { AiTone } from "./freemium-rules";
+import type { AiTone } from "./freemium-rules";
 export type QuotaResult = { allowed: boolean; remaining: number | null; is_vip: boolean };
-
-export function allowanceFor(count: number, limit: number) {
-  const used = Math.max(0, Math.floor(count));
-  return { allowed: used < limit, remaining: Math.max(0, limit - used) };
-}
 
 const guestKey = (userId: string) => `belazzouz.guest-messages.${userId}`;
 
@@ -48,16 +43,6 @@ export function quotaMessage(lang: "en" | "ar", guest: boolean) {
   return guest
     ? "You used all 5 guest messages. Create an account for 25 messages each day."
     : "You used all 25 messages for today. Your allowance resets tomorrow, or you can upgrade to VIP.";
-}
-
-export function toneInstruction(tone: AiTone) {
-  const instructions: Record<AiTone, string> = {
-    formal: "Use a polished, professional, formal response tone.",
-    casual: "Use a warm, relaxed, conversational response tone.",
-    concise: "Be concise: answer directly with only essential details.",
-    detailed: "Be detailed: explain thoroughly with useful context and examples.",
-  };
-  return instructions[tone];
 }
 
 export type SavedPersona = { id: string; name: string; content: string; tone: AiTone };
