@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { memoryContext } from "./memory-rules";
 
 const Input = z.object({
   messages: z.array(z.object({ role: z.enum(["user","assistant","system"]), content: z.string() })).min(1),
@@ -16,8 +18,9 @@ const Input = z.object({
 
 
 export const chatStream = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => Input.parse(d))
-  .handler(async function* ({ data }) {
+  .handler(async function* ({ data, context }) {
     const key = process.env.LOVABLE_API_KEY || "";
 
 
@@ -35,6 +38,9 @@ export const chatStream = createServerFn({ method: "POST" })
         : `\n\n*** MANDATORY PERSONA OVERRIDE ***\nThe user described themselves as: "${data.persona}".\nYou MUST forcefully override your neutral template and adopt the matching behavioral tone, vocabulary, technical depth, and examples appropriate for this exact background in every single reply. Address them as a peer of that group — use the domain-specific terminology, references, and examples they will recognize.`;
     }
     if (data.weather) system += `\n\nUser local context: ${data.weather}`;
+    const { data: profile } = await context.supabase.from("profiles")
+      .select("is_vip,user_memory").eq("id", context.userId).maybeSingle();
+    system += memoryContext(profile);
 
     if (data.webContext) {
       const conf = typeof data.webConfidence === "number" ? Math.round(data.webConfidence * 100) : null;
