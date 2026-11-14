@@ -19,3 +19,9 @@
 - [ ] Add one free persona, unlimited VIP personas, and VIP tone selection in existing settings.
 - [ ] Connect the existing crown to the three-perk VIP modal and add history export for VIP.
 - [ ] Test quota/persona rules and verify the signed-in chat and settings flow.
+
+# VIP persistent memory
+- [ ] Add private VIP-only profile memory storage and protected save/append operations.
+- [ ] Include saved memory in every VIP chat and extract new facts in the background.
+- [ ] Add a memory editor in profile settings and upgrade gating for non-VIP users.
+- [ ] Test access rules, persistence, editing, clearing, and new-chat recall.

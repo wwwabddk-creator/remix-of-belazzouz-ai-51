@@ -185,8 +185,10 @@ export type Database = {
           is_vip: boolean
           lang_pref: string
           last_message_date: string | null
+          memory_revision: number
           persona: string | null
           theme_config: Json | null
+          user_memory: string
           voice_pref: string
         }
         Insert: {
@@ -199,8 +201,10 @@ export type Database = {
           is_vip?: boolean
           lang_pref?: string
           last_message_date?: string | null
+          memory_revision?: number
           persona?: string | null
           theme_config?: Json | null
+          user_memory?: string
           voice_pref?: string
         }
         Update: {
@@ -213,8 +217,10 @@ export type Database = {
           is_vip?: boolean
           lang_pref?: string
           last_message_date?: string | null
+          memory_revision?: number
           persona?: string | null
           theme_config?: Json | null
+          user_memory?: string
           voice_pref?: string
         }
         Relationships: []
@@ -281,6 +287,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      append_user_memory: {
+        Args: { expected_revision: number; facts: string[] }
+        Returns: boolean
+      }
       consume_daily_message: { Args: never; Returns: Json }
       has_role: {
         Args: {

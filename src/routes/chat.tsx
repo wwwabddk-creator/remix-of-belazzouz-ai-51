@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { isUnsafePrompt, safetyRefusal, parseMemoryCommand, rememberFact, forgetFact, readMemory } from "@/lib/client-limits";
+import { isUnsafePrompt, safetyRefusal } from "@/lib/client-limits";
 import { addLibraryItem, saveGeneratedContent } from "@/lib/library";
 import { consumeUserMessage, quotaMessage, readVipStatus, toneInstruction } from "@/lib/freemium";
 
@@ -25,6 +25,8 @@ import { PersonaInput } from "@/components/PersonaInput";
 import { GroupChat } from "@/components/GroupChat";
 import { ChatHistorySidebar } from "@/components/ChatHistorySidebar";
 import { VipModal } from "@/components/VipModal";
+import { MemorySettings } from "@/components/MemorySettings";
+import { extractUserMemory } from "@/lib/memory.functions";
 import { AttachmentButton, type Attachment } from "@/components/AttachmentButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { MessageContent } from "@/components/MessageContent";
@@ -62,6 +64,7 @@ function ChatPage() {
   const searchFn = useServerFn(webSearch);
   const genFn = useServerFn(aiImageGenerate);
   const editFn = useServerFn(aiImageEdit);
+  const extractMemory = useServerFn(extractUserMemory);
   const [lastImage, setLastImage] = useState<string | null>(null);
   const [pending, setPending] = useState<Attachment[]>([]);
   const [mode, setMode] = useState<"fast" | "deep" | "hybrid">("hybrid");
@@ -110,19 +113,8 @@ function ChatPage() {
       return;
     }
 
-    // Memory commands (client-side)
-    const memCmd = q ? parseMemoryCommand(q) : null;
-    if (memCmd) {
-      if (memCmd.kind === "remember") {
-        rememberFact(memCmd.arg);
-        setMessages((m) => [...m, { role: "user", content: q }, { role: "assistant", content: lang === "ar" ? `تمام، سأتذكر: «${memCmd.arg}»` : `Got it, I'll remember: "${memCmd.arg}"` }]);
-      } else {
-        const n = forgetFact(memCmd.arg);
-        setMessages((m) => [...m, { role: "user", content: q }, { role: "assistant", content: lang === "ar" ? `حذفت ${n} عنصر(عناصر) من الذاكرة.` : `Removed ${n} memory item(s).` }]);
-      }
-      setInput("");
-      return;
-    }
+    // A separate authenticated request saves durable facts without delaying the reply.
+    if (q) void extractMemory({ data: { message: q } }).catch(() => {});
 
     // Omni-intent routing
     const attachedImage = pending.find((p) => p.type?.startsWith("image/"));
@@ -240,15 +232,9 @@ function ChatPage() {
       // Live online verification — runs in parallel with stream prep
       const searchPromise = searchFn({ data: { q } }).catch(() => ({ results: [] as WebSearchResult[], summary: "" }));
       const search = await searchPromise;
-      const mem = readMemory();
       const personaWithMem = [
         persona || "",
         isVip ? `\n\n${toneInstruction(tone)}` : "",
-        mem.length
-          ? (lang === "ar"
-              ? `\n\nذكريات المستخدم المحفوظة محلياً (استخدمها لتخصيص الإجابة):\n- ${mem.join("\n- ")}`
-              : `\n\nUser's saved memories (use them to personalize):\n- ${mem.join("\n- ")}`)
-          : "",
       ].join("").trim();
       const iter = (await streamFn({ data: { messages: next, lang, mode, persona: personaWithMem ? personaWithMem.slice(0, 500) : undefined, webContext: search.summary || undefined, webConfidence: (search as { confidence?: number }).confidence, webProviders: (search as { providersUsed?: string[] }).providersUsed } })) as AsyncIterable<{ delta?: string }>;
       let acc = "";
@@ -346,6 +332,7 @@ function ChatPage() {
           <AvatarSettings user={user} lang={lang} />
           <ColorCustomizer />
           <PersonaInput isVip={isVip} />
+          <MemorySettings isVip={isVip} lang={lang} onUpgrade={() => setShowVip(true)} />
         </div>
       )}
 
@@ -462,6 +449,7 @@ function ChatPage() {
           try {
             const quota = await consumeUserMessage(user);
             if (!quota.allowed) return quotaMessage(lang, user.is_anonymous === true);
+            if (text.trim()) void extractMemory({ data: { message: text } }).catch(() => {});
             const iter = (await streamFn({ data: { messages: [{ role: "user", content: text }], lang, mode: "fast", persona: isVip ? toneInstruction(tone) : undefined } })) as AsyncIterable<{ delta?: string }>;
             let acc = "";
             for await (const c of iter) acc += c?.delta || "";
