@@ -1,6 +1,5 @@
-# Library
 # Custom response style
-- [ ] Add a user-written tone alongside the existing VIP options, persist it with personas, and verify its use in chat.
+- [x] Add a user-written tone alongside the existing VIP options, persist it with personas, and verify tone resolution plus signed-in mobile/desktop settings and reload persistence.
 
 # Library
 - [x] Save generated images, code and text in the existing library.
