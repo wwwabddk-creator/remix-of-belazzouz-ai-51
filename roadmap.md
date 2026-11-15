@@ -22,7 +22,7 @@
 
 # VIP persistent memory
 - [x] Grant VIP to the corrected account wwwabddk@gmail.com.
-- [ ] Add private VIP-only profile memory storage and protected save/append operations.
-- [ ] Include saved memory in every VIP chat and extract new facts in the background.
-- [ ] Add a memory editor in profile settings and upgrade gating for non-VIP users.
-- [ ] Test access rules, persistence, editing, clearing, and new-chat recall.
+- [x] Add private VIP-only profile memory storage and protected save/append operations.
+- [x] Include saved memory in every VIP chat and extract new facts in the background.
+- [x] Add a memory editor in profile settings and upgrade gating for non-VIP users.
+- [x] Test access rules, persistence, editing, clearing to the original empty memory, and new-chat recall.
