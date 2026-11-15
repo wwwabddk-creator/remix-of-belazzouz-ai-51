@@ -1,4 +1,8 @@
 # Library
+# Custom response style
+- [ ] Add a user-written tone alongside the existing VIP options, persist it with personas, and verify its use in chat.
+
+# Library
 - [x] Save generated images, code and text in the existing library.
 - [x] Refresh category views and All immediately without changing the design.
 - [x] Test classification, persistence and the signed-in creation flow.

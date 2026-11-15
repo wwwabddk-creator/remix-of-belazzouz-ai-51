@@ -11,7 +11,7 @@ import { Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export function PersonaInput({ isVip = false }: { isVip?: boolean }) {
-  const { lang, persona, setPersona, tone, setTone } = useAppPrefs();
+  const { lang, persona, setPersona, tone, setTone, customTone, setCustomTone } = useAppPrefs();
   const { user } = useAuth();
   const t = T[lang];
   const ar = lang === "ar";
@@ -31,6 +31,7 @@ export function PersonaInput({ isVip = false }: { isVip?: boolean }) {
       name: name.trim() || (ar ? `شخصية ${saved.length + 1}` : `Persona ${saved.length + 1}`),
       content: persona.trim(),
       tone,
+      customTone,
     };
     const updated = activeId ? saved.map((p) => p.id === activeId ? next : p) : [...saved, next];
     writeSavedPersonas(user.id, updated);
@@ -47,6 +48,7 @@ export function PersonaInput({ isVip = false }: { isVip?: boolean }) {
     setName(selected.name);
     setPersona(selected.content);
     setTone(selected.tone);
+    setCustomTone(selected.customTone || "");
   };
 
   const remove = () => {
@@ -77,8 +79,20 @@ export function PersonaInput({ isVip = false }: { isVip?: boolean }) {
               <SelectItem value="casual">{ar ? "ودّية" : "Casual"}</SelectItem>
               <SelectItem value="concise">{ar ? "مختصرة" : "Concise"}</SelectItem>
               <SelectItem value="detailed">{ar ? "مفصّلة" : "Detailed"}</SelectItem>
+              <SelectItem value="custom">{ar ? "مخصّصة" : "Custom"}</SelectItem>
             </SelectContent>
           </Select>
+          {tone === "custom" && (
+            <Textarea
+              value={customTone}
+              onChange={(e) => setCustomTone(e.target.value)}
+              aria-label={ar ? "أسلوب الرد المخصّص" : "Custom response style"}
+              placeholder={ar ? "اكتب أسلوب الرد الذي تريده…" : "Write your preferred response style…"}
+              maxLength={200}
+              rows={2}
+              className="text-base sm:col-span-2"
+            />
+          )}
         </div>
       )}
       <Textarea

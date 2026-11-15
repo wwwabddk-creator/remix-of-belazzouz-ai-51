@@ -47,7 +47,7 @@ type Msg = { role: "user" | "assistant"; content: string; sources?: WebSearchRes
 function ChatPage() {
   const { user, loading, isSuperAdmin } = useAuth();
   const nav = useNavigate();
-  const { lang, setLang, reset, persona, tone } = useAppPrefs();
+  const { lang, setLang, reset, persona, tone, customTone } = useAppPrefs();
   const t = T[lang];
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -232,8 +232,8 @@ function ChatPage() {
       const searchPromise = searchFn({ data: { q } }).catch(() => ({ results: [] as WebSearchResult[], summary: "" }));
       const search = await searchPromise;
       const personaWithMem = [
-        persona || "",
-        isVip ? `\n\n${toneInstruction(tone)}` : "",
+        isVip ? toneInstruction(tone, customTone) : "",
+        persona ? `\n\n${persona}` : "",
       ].join("").trim();
       const iter = (await streamFn({ data: { messages: next, lang, mode, persona: personaWithMem ? personaWithMem.slice(0, 500) : undefined, webContext: search.summary || undefined, webConfidence: (search as { confidence?: number }).confidence, webProviders: (search as { providersUsed?: string[] }).providersUsed } })) as AsyncIterable<{ delta?: string }>;
       let acc = "";
@@ -448,7 +448,7 @@ function ChatPage() {
             const quota = await consumeUserMessage(user);
             if (!quota.allowed) return quotaMessage(lang, user.is_anonymous === true);
             if (text.trim()) void extractMemory({ data: { message: text } }).catch(() => {});
-            const iter = (await streamFn({ data: { messages: [{ role: "user", content: text }], lang, mode: "fast", persona: isVip ? toneInstruction(tone) : undefined } })) as AsyncIterable<{ delta?: string }>;
+            const iter = (await streamFn({ data: { messages: [{ role: "user", content: text }], lang, mode: "fast", persona: isVip ? toneInstruction(tone, customTone) : undefined } })) as AsyncIterable<{ delta?: string }>;
             let acc = "";
             for await (const c of iter) acc += c?.delta || "";
             return acc || (lang === "ar" ? "نعم؟" : "Yes?");

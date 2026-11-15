@@ -45,7 +45,7 @@ export function quotaMessage(lang: "en" | "ar", guest: boolean) {
     : "You used all 25 messages for today. Your allowance resets tomorrow, or you can upgrade to VIP.";
 }
 
-export type SavedPersona = { id: string; name: string; content: string; tone: AiTone };
+export type SavedPersona = { id: string; name: string; content: string; tone: AiTone; customTone?: string };
 const personaKey = (userId: string) => `belazzouz.personas.${userId}`;
 
 export function readSavedPersonas(userId: string): SavedPersona[] {
@@ -54,7 +54,8 @@ export function readSavedPersonas(userId: string): SavedPersona[] {
     if (!Array.isArray(value)) return [];
     return value.filter((p): p is SavedPersona =>
       p && typeof p.id === "string" && typeof p.name === "string" &&
-      typeof p.content === "string" && ["formal", "casual", "concise", "detailed"].includes(p.tone));
+      typeof p.content === "string" && ["formal", "casual", "concise", "detailed", "custom"].includes(p.tone) &&
+      (p.customTone === undefined || typeof p.customTone === "string"));
   } catch { return []; }
 }
 

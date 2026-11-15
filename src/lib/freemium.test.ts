@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { allowanceFor, GUEST_MESSAGE_LIMIT, FREE_DAILY_MESSAGE_LIMIT, toneInstruction } from "./freemium-rules";
 
 describe("freemium rules", () => {
+  it("uses the user's own response style when custom is selected", () => {
+    expect(toneInstruction("custom", "  أجب باللهجة الجزائرية  ")).toBe("Preferred response style: أجب باللهجة الجزائرية");
+    expect(toneInstruction("custom", "  ")).toBe("");
+    expect(toneInstruction("concise", "أجب باللهجة الجزائرية")).toBe("Be concise: answer directly with only essential details.");
+  });
   it("allows exactly five total guest messages", () => {
     expect(GUEST_MESSAGE_LIMIT).toBe(5);
     expect(allowanceFor(4, GUEST_MESSAGE_LIMIT)).toEqual({ allowed: true, remaining: 1 });
