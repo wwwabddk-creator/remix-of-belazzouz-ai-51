@@ -3,3 +3,4 @@
 - Classify completed AI replies in the shared library-content module and notify library views after committed writes; this keeps categories and All consistent without coupling storage to UI state.
 - Use the shared UserAvatar for header and user-message badges, with browser-local appearance choices and 150px canvas-cropped JPEG photos keyed by account ID; this keeps avatars consistent without changing auth metadata or remote storage.
 - Store persistent memory on the owning profile and gate reads, writes, extraction, and prompt injection by server-verified is_vip; revision-checked appends prevent background extraction from undoing edits or clearing memory.
+- Keep custom response styles in existing browser preferences and saved personas, and resolve them through the shared tone instruction helper so chat paths stay consistent.
