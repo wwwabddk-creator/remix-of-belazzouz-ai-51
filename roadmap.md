@@ -21,7 +21,7 @@
 - [ ] Test quota/persona rules and verify the signed-in chat and settings flow.
 
 # VIP persistent memory
-- [ ] Grant VIP to the account wwwabdbk@gmail.com after confirming an exact match.
+- [x] Grant VIP to the corrected account wwwabddk@gmail.com.
 - [ ] Add private VIP-only profile memory storage and protected save/append operations.
 - [ ] Include saved memory in every VIP chat and extract new facts in the background.
 - [ ] Add a memory editor in profile settings and upgrade gating for non-VIP users.
