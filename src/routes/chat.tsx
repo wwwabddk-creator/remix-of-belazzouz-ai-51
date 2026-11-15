@@ -25,7 +25,6 @@ import { PersonaInput } from "@/components/PersonaInput";
 import { GroupChat } from "@/components/GroupChat";
 import { ChatHistorySidebar } from "@/components/ChatHistorySidebar";
 import { VipModal } from "@/components/VipModal";
-import { MemorySettings } from "@/components/MemorySettings";
 import { extractUserMemory } from "@/lib/memory.functions";
 import { AttachmentButton, type Attachment } from "@/components/AttachmentButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
@@ -332,7 +331,6 @@ function ChatPage() {
           <AvatarSettings user={user} lang={lang} />
           <ColorCustomizer />
           <PersonaInput isVip={isVip} />
-          <MemorySettings isVip={isVip} lang={lang} onUpgrade={() => setShowVip(true)} />
         </div>
       )}
 
