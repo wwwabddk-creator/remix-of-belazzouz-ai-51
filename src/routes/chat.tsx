@@ -321,7 +321,7 @@ function ChatPage() {
           <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => setShowCustom((s) => !s)} title={lang === "ar" ? "إعدادات الملف الشخصي" : "Profile settings"} aria-label={lang === "ar" ? "إعدادات الملف الشخصي" : "Profile settings"} aria-expanded={showCustom}><UserAvatar user={user} /></Button>
           <Button variant="ghost" size="icon" className="h-11 w-11" onClick={reset} title={t.reset}>↺</Button>
           <Button variant="ghost" size="icon" className="h-11 w-11" onClick={() => setLang(lang === "en" ? "ar" : "en")}><Languages className="h-5 w-5" /></Button>
-          <Button variant="ghost" size="icon" className="h-11 w-11 text-[color:var(--vip)]" onClick={() => setShowVip(true)} title={t.vip}><Crown className="h-5 w-5" /></Button>
+          <Button variant="ghost" size="icon" className="vip-header-badge h-11 w-11" onClick={() => setShowVip(true)} title={t.vip} aria-label={t.vip}><Crown className="h-5 w-5" /></Button>
           <Button variant="ghost" size="icon" className="h-11 w-11" onClick={async () => { await supabase.auth.signOut(); nav({ to: "/" }); }}><LogOut className="h-5 w-5" /></Button>
         </div>
       </header>

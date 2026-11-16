@@ -41,7 +41,7 @@ function Landing() {
           <Button variant="ghost" size="lg" onClick={() => setLang(lang === "en" ? "ar" : "en")} className="h-12">
             <Languages className="me-2 h-5 w-5" />{lang === "en" ? "AR" : "EN"}
           </Button>
-          <Button variant="ghost" size="lg" className="h-12 text-[color:var(--vip)]" onClick={() => setShowVip(true)}>
+          <Button variant="ghost" size="lg" className="vip-header-badge h-12 px-4" onClick={() => setShowVip(true)}>
             <Crown className="me-2 h-5 w-5" />{t.vip}
           </Button>
         </div>

@@ -1,3 +1,6 @@
+# VIP presentation
+- [ ] Upgrade only the VIP header badges and modal, add regional display prices, and verify monthly/yearly switching on mobile and desktop.
+
 # Custom response style
 - [x] Add a user-written tone alongside the existing VIP options, persist it with personas, and verify tone resolution plus signed-in mobile/desktop settings and reload persistence.
 
