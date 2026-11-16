@@ -106,3 +106,49 @@
   content: "▍"; margin-inline-start: 2px; color: var(--primary);
   animation: type-blink 1s step-end infinite;
 }
+
+/* Scoped VIP presentation tokens; the application theme stays unchanged. */
+:root {
+  --vip-gold-soft: oklch(0.91 0.09 90);
+  --vip-gold-deep: oklch(0.66 0.14 72);
+  --vip-luxe-purple: oklch(0.63 0.15 305);
+  --vip-ink: oklch(0.18 0.025 285);
+  --vip-gradient-gold: linear-gradient(110deg, var(--vip-gold-soft), var(--vip), var(--vip-gold-deep));
+  --vip-gradient-badge: linear-gradient(130deg, color-mix(in oklab, var(--vip) 20%, var(--card)), color-mix(in oklab, var(--vip-gold-deep) 8%, var(--card)));
+  --vip-gradient-border: linear-gradient(145deg, color-mix(in oklab, var(--vip-gold-soft) 40%, transparent), color-mix(in oklab, var(--vip) 12%, transparent), color-mix(in oklab, var(--vip) 30%, transparent));
+  --vip-gradient-panel: radial-gradient(ellipse at 50% -15%, color-mix(in oklab, var(--vip) 13%, transparent), transparent 55%), linear-gradient(var(--background), var(--background));
+  --vip-gradient-action: linear-gradient(110deg, var(--vip-gold-soft), var(--vip), var(--vip-luxe-purple));
+  --vip-shadow: 0 18px 60px color-mix(in oklab, var(--background) 75%, transparent), 0 -5px 32px color-mix(in oklab, var(--vip) 9%, transparent);
+  --vip-hover-shadow: 0 0 18px color-mix(in oklab, var(--vip) 20%, transparent);
+}
+.vip-header-badge {
+  border: 1px solid color-mix(in oklab, var(--vip) 40%, transparent);
+  border-radius: 999px;
+  background: var(--vip-gradient-badge);
+  color: var(--vip-gold-soft);
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+}
+.vip-header-badge:hover {
+  color: var(--vip-gold-soft);
+  border-color: var(--vip);
+  box-shadow: var(--vip-hover-shadow);
+}
+.vip-header-badge svg { filter: drop-shadow(0 0 3px color-mix(in oklab, var(--vip) 40%, transparent)); }
+.vip-dialog {
+  border: 1px solid transparent;
+  background: var(--vip-gradient-panel) padding-box, var(--vip-gradient-border) border-box;
+  box-shadow: var(--vip-shadow);
+}
+.vip-gold-text { background: var(--vip-gradient-gold); background-clip: text; -webkit-background-clip: text; color: transparent; }
+.vip-pro, .vip-emblem { border: 1px solid color-mix(in oklab, var(--vip) 30%, transparent); background: var(--vip-gradient-badge); color: var(--vip-gold-soft); }
+.vip-plan-toggle { border: 1px solid color-mix(in oklab, var(--vip) 15%, transparent); background: var(--card); }
+.vip-plan { color: var(--muted-foreground); }
+.vip-plan[aria-pressed="true"] { background: var(--vip-gradient-gold); color: var(--vip-ink); box-shadow: var(--vip-hover-shadow); }
+.vip-perks { border: 1px solid color-mix(in oklab, var(--vip) 15%, transparent); background: color-mix(in oklab, var(--card) 70%, transparent); backdrop-filter: blur(12px); }
+.vip-subscribe { position: relative; overflow: hidden; background: var(--vip-gradient-action); color: var(--vip-ink); box-shadow: var(--vip-hover-shadow); }
+.vip-subscribe:hover { background: var(--vip-gradient-action); }
+.vip-subscribe:disabled { opacity: 0.85; }
+.vip-subscribe::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 25%, color-mix(in oklab, var(--vip-gold-soft) 35%, transparent) 50%, transparent 75%); transform: translateX(-150%); pointer-events: none; }
+.vip-subscribe:not(:disabled):hover::after { animation: vip-shimmer 900ms ease; }
+@keyframes vip-shimmer { to { transform: translateX(150%); } }
+@media (prefers-reduced-motion: reduce) { .vip-header-badge { transition: none; } .vip-subscribe:not(:disabled):hover::after { animation: none; } }
