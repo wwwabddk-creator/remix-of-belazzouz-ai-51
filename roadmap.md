@@ -1,5 +1,5 @@
 # VIP presentation
-- [ ] Enforce 10 daily generated images per VIP account and verify the boundary, reset, and blocked chat flow.
+- [x] Enforce 10 daily generated images per VIP account; verified concurrent requests, tenth/eleventh boundary, UTC reset, protected counter, and blocked chat flow; removed test usage.
 - [x] Upgrade only the VIP header badges and modal, add regional display prices, and verify monthly/yearly switching on mobile and desktop, including the signed-in active VIP state.
 
 # Custom response style
