@@ -112,8 +112,6 @@ function ChatPage() {
       return;
     }
 
-    // A separate authenticated request saves durable facts without delaying the reply.
-    if (q) void extractMemory({ data: { message: q } }).catch(() => {});
 
     // Omni-intent routing
     const attachedImage = pending.find((p) => p.type?.startsWith("image/"));
@@ -260,6 +258,8 @@ function ChatPage() {
       if (user && acc.trim() && !abortRef.current?.signal.aborted) {
         await saveGeneratedContent(acc, q || acc, user.id).catch(libraryError);
       }
+      // VIP smart memory: summarize new facts/topics after each reply, in the background.
+      if (q && acc.trim() && isVip) void extractMemory({ data: { message: q, reply: acc.slice(0, 8000) } }).catch(() => {});
       if (user && activeId && acc) {
         try {
           await supabase.from("messages").insert({ conversation_id: activeId, user_id: user.id, role: "assistant", content: acc });
@@ -313,6 +313,7 @@ function ChatPage() {
             <SheetContent side={lang === "ar" ? "right" : "left"} className="w-80 p-0">
               <div className="h-full pt-10">
                 <ChatHistorySidebar
+                  onUpgrade={() => setShowVip(true)}
                   activeId={convId}
                   refreshKey={historyKey}
                   onSelect={loadConversation}
@@ -368,18 +369,6 @@ function ChatPage() {
 
                     {m.attachments?.map((a, k) => <AttachmentPreview key={k} att={a} />)}
                     {m.image && <img src={m.image} alt="generated" className="mt-2 max-h-80 w-auto rounded-lg" />}
-                    {m.sources && m.sources.length > 0 && (
-                      <div className="mt-3 border-t border-border/40 pt-2">
-                        <p className="mb-1 text-xs font-semibold opacity-80">{t.sources}</p>
-                        <ul className="space-y-1">
-                          {m.sources.slice(0, 4).map((s, j) => (
-                            <li key={j} className="text-xs">
-                              <a href={s.url} target="_blank" rel="noreferrer" className="underline opacity-80 hover:opacity-100">[{j + 1}] {s.title}</a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </div>
                   {m.role === "user" && <UserAvatar user={user} />}
                 </div>

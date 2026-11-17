@@ -14,6 +14,7 @@ import {
 import { readLibrary, removeLibraryItem, LIBRARY_CHANGED, type LibItem, type LibKind } from "@/lib/library";
 import { filterLibrary } from "@/lib/library-content";
 import { toast } from "sonner";
+import { SmartMemoryManager } from "@/components/SmartMemoryManager";
 
 export type Conv = { id: string; title: string; updated_at: string };
 
@@ -21,8 +22,9 @@ export type Conv = { id: string; title: string; updated_at: string };
 export { addLibraryItem } from "@/lib/client-limits";
 
 export function ChatHistorySidebar({
-  activeId, onSelect, onNew, refreshKey, isVip = false,
+  activeId, onSelect, onNew, refreshKey, isVip = false, onUpgrade,
 }: {
+  onUpgrade?: () => void;
   activeId: string | null;
   onSelect: (id: string) => void;
   onNew: () => void;
@@ -239,6 +241,7 @@ export function ChatHistorySidebar({
           <Button onClick={addMem} variant="outline" className="h-10 w-full justify-center gap-2 text-sm">
             <Plus className="h-4 w-4" /> {lang === "ar" ? "أضف ذكرى" : "Add memory"}
           </Button>
+          <SmartMemoryManager isVip={isVip} lang={lang} onUpgrade={onUpgrade} />
           <p className="px-1 text-[10px] text-muted-foreground">
             {lang === "ar" ? "اكتب في الدردشة: /remember … أو /forget …" : "In chat type: /remember … or /forget …"}
           </p>

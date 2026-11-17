@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, Check, Infinity, Users, Download, Brain, ImagePlus, Zap, PanelsTopLeft } from "lucide-react";
+import { Crown, Check, Infinity, Users, Download, Brain, ImagePlus, Zap, PanelsTopLeft, Globe } from "lucide-react";
 import { useEffect, useState } from "react";
 import { vipPricingForTimeZone, type VipPlan } from "./vip-pricing";
 import { useAppPrefs } from "@/lib/app-prefs";
@@ -21,7 +21,8 @@ export function VipModal({ open, onOpenChange, isVip = false }: { open: boolean;
     { Icon: Infinity, text: ar ? "رسائل يومية غير محدودة" : "Unlimited daily messages", detail: ar ? "محادثات بلا قيود أو توقف." : "Conversations without daily limits." },
     { Icon: Brain, text: ar ? "ذاكرة ذكية دائمة" : "Persistent smart memory", detail: ar ? "يتذكر معلوماتك وتفضيلاتك المحفوظة، حتى في المحادثات الجديدة." : "Remembers saved facts and preferences, even in new chats." },
     { Icon: ImagePlus, text: ar ? "توليد حتى 10 صور يومياً" : "Up to 10 images daily", detail: ar ? "إنشاء صور احترافية فائقة الجودة." : "Create high-quality professional images." },
-    { Icon: Zap, text: ar ? "سرعة وأولوية قصوى" : "Maximum speed & priority", detail: ar ? "استجابة فورية بدون انتظار." : "Instant responses without waiting.", upcoming: true },
+    { Icon: Globe, text: ar ? "بحث مباشر على الإنترنت" : "Live Web Search", detail: ar ? "جلب الأخبار والمعلومات والأسعار اللحظية من الويب." : "Fetch real-time news, information and prices from the web.", upcoming: true },
+    { Icon: Zap, text: ar ? "سرعة وأولوية قصوى" : "Maximum speed & priority", detail: ar ? "استجابة فورية بدون انتظار." : "Instant responses without waiting." },
     { Icon: Users, text: ar ? "شخصيات AI غير محدودة ونغمات رد مخصصة" : "Unlimited saved AI personas & custom response tones" },
     { Icon: PanelsTopLeft, text: ar ? "معاينة حية وألعاب مصغرة تفاعلية (Canvas)" : "Live previews & interactive mini-games (Canvas)", upcoming: true },
     { Icon: Download, text: ar ? "تصدير شامل للملفات وحفظ السجل كاملاً" : "Comprehensive file export & full chat history", detail: "Word · PDF · Excel · PowerPoint", upcoming: true },

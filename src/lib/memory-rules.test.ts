@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canUseMemory, memoryContext, cleanMemoryFacts } from "./memory-rules";
+import { canUseMemory, memoryContext, cleanMemoryFacts, limitWords, memoryPoints } from "./memory-rules";
 
 describe("VIP persistent memory", () => {
   it("requires is_vip=true, not merely a signed-in profile", () => {
@@ -18,5 +18,14 @@ describe("VIP persistent memory", () => {
   it("appends only distinct nonempty extracted facts", () => {
     expect(cleanMemoryFacts([" Prefers Arabic ", "Prefers Arabic", "", "Building a bookstore"]))
       .toEqual(["Prefers Arabic", "Building a bookstore"]);
+  });
+});
+describe("smart memory limits", () => {
+  it("caps memory at 500 words", () => {
+    const long = Array.from({ length: 600 }, (_, i) => `w${i}`).join(" ");
+    expect(limitWords(long, 500).split(/\s+/).length).toBe(500);
+  });
+  it("splits memory into deletable points", () => {
+    expect(memoryPoints("- Likes tea\n\n• Builds apps")).toEqual(["Likes tea", "Builds apps"]);
   });
 });
