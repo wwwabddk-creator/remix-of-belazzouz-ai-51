@@ -168,6 +168,10 @@ function ChatPage() {
             return copy;
           });
           if (user) await addLibraryItem({ kind: "image", title: prompt.slice(0, 60), url: r.dataUrl }, user.id).catch(libraryError);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Could not generate image.";
+          setMessages((m) => [...m.slice(0, -1), { role: "assistant", content: message }]);
+          toast.error(message);
         } finally { setBusy(false); }
         return;
       }
@@ -203,6 +207,10 @@ function ChatPage() {
           return copy;
         });
         if (user) await addLibraryItem({ kind: "image", title: genMatch[2].slice(0, 60), url: r.dataUrl }, user.id).catch(libraryError);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Could not generate image.";
+        setMessages((m) => [...m.slice(0, -1), { role: "assistant", content: message }]);
+        toast.error(message);
       } finally { setBusy(false); }
       return;
     }

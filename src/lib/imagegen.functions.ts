@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { enforceImageQuota, type ImageQuotaResult } from "./image-quota";
 
 const GenInput = z.object({
   prompt: z.string().min(2).max(2000),
@@ -65,8 +67,12 @@ async function tryGateway(prompt: string, width = 1024, height = 1024): Promise<
 }
 
 export const aiImageGenerate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((d) => GenInput.parse(d))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { data: quota, error } = await context.supabase.rpc("consume_vip_image");
+    if (error) throw new Error("تعذر التحقق من رصيد الصور. Could not verify image allowance.");
+    enforceImageQuota(quota as ImageQuotaResult | null);
     const w = data.width ?? 1024;
     const h = data.height ?? 1024;
 

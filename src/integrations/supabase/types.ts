@@ -282,6 +282,24 @@ export type Database = {
         }
         Relationships: []
       }
+      vip_image_usage: {
+        Row: {
+          images_count: number
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          images_count?: number
+          usage_date?: string
+          user_id: string
+        }
+        Update: {
+          images_count?: number
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -292,6 +310,7 @@ export type Database = {
         Returns: boolean
       }
       consume_daily_message: { Args: never; Returns: Json }
+      consume_vip_image: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
