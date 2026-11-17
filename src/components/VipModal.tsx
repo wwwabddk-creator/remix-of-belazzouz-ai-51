@@ -20,7 +20,7 @@ export function VipModal({ open, onOpenChange, isVip = false }: { open: boolean;
   const perks = [
     { Icon: Infinity, text: ar ? "رسائل يومية غير محدودة" : "Unlimited daily messages", detail: ar ? "محادثات بلا قيود أو توقف." : "Conversations without daily limits." },
     { Icon: Brain, text: ar ? "ذاكرة ذكية دائمة" : "Persistent smart memory", detail: ar ? "يتذكر معلوماتك وتفضيلاتك المحفوظة، حتى في المحادثات الجديدة." : "Remembers saved facts and preferences, even in new chats." },
-    { Icon: ImagePlus, text: ar ? "توليد حتى 10 صور يومياً" : "Up to 10 images daily", detail: ar ? "إنشاء صور احترافية فائقة الجودة." : "Create high-quality professional images.", upcoming: true },
+    { Icon: ImagePlus, text: ar ? "توليد حتى 10 صور يومياً" : "Up to 10 images daily", detail: ar ? "إنشاء صور احترافية فائقة الجودة." : "Create high-quality professional images." },
     { Icon: Zap, text: ar ? "سرعة وأولوية قصوى" : "Maximum speed & priority", detail: ar ? "استجابة فورية بدون انتظار." : "Instant responses without waiting.", upcoming: true },
     { Icon: Users, text: ar ? "شخصيات AI غير محدودة ونغمات رد مخصصة" : "Unlimited saved AI personas & custom response tones" },
     { Icon: PanelsTopLeft, text: ar ? "معاينة حية وألعاب مصغرة تفاعلية (Canvas)" : "Live previews & interactive mini-games (Canvas)", upcoming: true },

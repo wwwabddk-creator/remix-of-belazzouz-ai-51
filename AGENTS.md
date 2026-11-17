@@ -5,3 +5,4 @@
 - Store persistent memory on the owning profile and gate reads, writes, extraction, and prompt injection by server-verified is_vip; revision-checked appends prevent background extraction from undoing edits or clearing memory.
 - Keep custom response styles in existing browser preferences and saved personas, and resolve them through the shared tone instruction helper so chat paths stay consistent.
 - Resolve VIP display prices in the browser through a tested time-zone helper; time zones are approximate presentation hints, not verified billing location or entitlement enforcement.
+- Reserve VIP image-generation quota atomically in a server-authenticated RPC before provider calls, stored separately with read-only owner access; this prevents parallel requests and browser edits from bypassing the daily cap. Count one generation request, not each fallback attempt, and reset on UTC days.
