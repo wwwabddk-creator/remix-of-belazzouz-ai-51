@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { isUnsafePrompt, safetyRefusal } from "@/lib/client-limits";
 import { addLibraryItem, saveGeneratedContent } from "@/lib/library";
-import { consumeUserMessage, quotaMessage, readVipStatus, toneInstruction } from "@/lib/freemium";
+import { consumeUserMessage, FREE_DAILY_MESSAGE_LIMIT, GUEST_MESSAGE_LIMIT, quotaMessage, readVipStatus, toneInstruction } from "@/lib/freemium";
 
 import { supabase } from "@/integrations/supabase/client";
 import { chatStream } from "@/lib/chat.functions";
@@ -408,13 +408,22 @@ function ChatPage() {
 
             <div className="mt-2 flex items-end gap-2 rounded-2xl border border-border bg-card/60 p-2 backdrop-blur">
               <AttachmentButton onUploaded={(atts) => setPending((cur) => [...cur, ...atts])} disabled={busy} isSubscriber={isSubscriber} />
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={`${t.typeMessage}  ·  /image …`}
-                rows={1}
-                className="min-h-[3.5rem] max-h-48 resize-none border-0 bg-transparent text-base focus-visible:ring-0"
-              />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                <div dir={lang === "ar" ? "rtl" : "ltr"} className="self-start rounded-full border border-border bg-background/50 px-2.5 py-1 text-[11px] text-muted-foreground">
+                  {isVip || isSuperAdmin
+                    ? lang === "ar" ? "رسائل غير محدودة · VIP" : "Unlimited messages · VIP"
+                    : user.is_anonymous
+                      ? lang === "ar" ? `${GUEST_MESSAGE_LIMIT} رسائل إجمالاً · ضيف` : `${GUEST_MESSAGE_LIMIT} messages total · Guest`
+                      : lang === "ar" ? `${FREE_DAILY_MESSAGE_LIMIT} رسالة يومياً · مجاني` : `${FREE_DAILY_MESSAGE_LIMIT} messages/day · Free`}
+                </div>
+                <Textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={`${t.typeMessage}  ·  /image …`}
+                  rows={1}
+                  className="min-h-[3.5rem] max-h-48 resize-none border-0 bg-transparent text-base focus-visible:ring-0"
+                />
+              </div>
               {busy ? (
                 <Button onClick={stop} className="h-14 w-14 bg-destructive text-destructive-foreground hover:bg-destructive/90" title={lang === "ar" ? "إيقاف" : "Stop"}>
                   <Square className="h-5 w-5" />
