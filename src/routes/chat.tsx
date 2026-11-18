@@ -51,6 +51,7 @@ function ChatPage() {
   const t = T[lang];
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
+  const [messageRemaining, setMessageRemaining] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [showCall, setShowCall] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
@@ -70,9 +71,10 @@ function ChatPage() {
   const abortRef = useRef<AbortController | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isSubscriber = isSuperAdmin || isVip;
+  const maxMessageLength = isVip ? 15000 : user?.is_anonymous ? 500 : 1500;
   const libraryError = () => toast.error(lang === "ar" ? "تعذر حفظ المحتوى في المكتبة." : "Could not save content to the library.");
 
-
+  useEffect(() => { setInput((current) => current.slice(0, maxMessageLength)); }, [maxMessageLength]);
   useEffect(() => { if (!loading && !user) nav({ to: "/" }); }, [loading, user, nav]);
 
   useEffect(() => {
@@ -102,6 +104,7 @@ function ChatPage() {
     if (!user) return;
     try {
       const quota = await consumeUserMessage(user);
+      setMessageRemaining(quota.remaining);
       if (!quota.allowed) {
         toast.warning(quotaMessage(lang, user.is_anonymous === true));
         return;
@@ -409,16 +412,31 @@ function ChatPage() {
             <div className="mt-2 flex items-end gap-2 rounded-2xl border border-border bg-card/60 p-2 backdrop-blur">
               <AttachmentButton onUploaded={(atts) => setPending((cur) => [...cur, ...atts])} disabled={busy} isSubscriber={isSubscriber} />
               <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <div dir={lang === "ar" ? "rtl" : "ltr"} className="self-start rounded-full border border-border bg-background/50 px-2.5 py-1 text-[11px] text-muted-foreground">
-                  {isVip || isSuperAdmin
-                    ? lang === "ar" ? "رسائل غير محدودة · VIP" : "Unlimited messages · VIP"
-                    : user.is_anonymous
-                      ? lang === "ar" ? `${GUEST_MESSAGE_LIMIT} رسائل إجمالاً · ضيف` : `${GUEST_MESSAGE_LIMIT} messages total · Guest`
-                      : lang === "ar" ? `${FREE_DAILY_MESSAGE_LIMIT} رسالة يومياً · مجاني` : `${FREE_DAILY_MESSAGE_LIMIT} messages/day · Free`}
+                <div dir={lang === "ar" ? "rtl" : "ltr"} className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-[11px]">
+                  <div className="self-start rounded-full border border-border bg-background/50 px-2.5 py-1 text-muted-foreground">
+                    {isVip || isSuperAdmin
+                      ? lang === "ar" ? "رسائل غير محدودة · VIP" : "Unlimited messages · VIP"
+                      : messageRemaining !== null
+                        ? lang === "ar" ? `متبقي ${messageRemaining} رسالة` : `${messageRemaining} messages remaining`
+                        : user.is_anonymous
+                          ? lang === "ar" ? `${GUEST_MESSAGE_LIMIT} رسائل إجمالاً · ضيف` : `${GUEST_MESSAGE_LIMIT} messages total · Guest`
+                          : lang === "ar" ? `${FREE_DAILY_MESSAGE_LIMIT} رسالة يومياً · مجاني` : `${FREE_DAILY_MESSAGE_LIMIT} messages/day · Free`}
+                  </div>
+                  {input.length > maxMessageLength * 0.7 && (
+                    <span className="text-muted-foreground">
+                      {input.length} / {maxMessageLength}
+                    </span>
+                  )}
+                  {input.length >= maxMessageLength && !isSubscriber && (
+                    <span className="text-[color:var(--vip)]" title={lang === "ar" ? "رقِّ إلى VIP لكتابة رسائل أطول." : "Upgrade to VIP to write longer messages."}>
+                      {lang === "ar" ? "وصلت للحد الأقصى. رقِّ إلى VIP لرسائل أطول." : "Limit reached. Upgrade to VIP for longer messages."}
+                    </span>
+                  )}
                 </div>
                 <Textarea
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) => setInput(e.target.value.slice(0, maxMessageLength))}
+                  maxLength={maxMessageLength}
                   placeholder={`${t.typeMessage}  ·  /image …`}
                   rows={1}
                   className="min-h-[3.5rem] max-h-48 resize-none border-0 bg-transparent text-base focus-visible:ring-0"
@@ -451,6 +469,7 @@ function ChatPage() {
         onAsk={async (text) => {
           try {
             const quota = await consumeUserMessage(user);
+            setMessageRemaining(quota.remaining);
             if (!quota.allowed) return quotaMessage(lang, user.is_anonymous === true);
             if (text.trim()) void extractMemory({ data: { message: text } }).catch(() => {});
             const iter = (await streamFn({ data: { messages: [{ role: "user", content: text }], lang, mode: "fast", persona: isVip ? toneInstruction(tone, customTone) : undefined } })) as AsyncIterable<{ delta?: string }>;
