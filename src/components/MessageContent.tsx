@@ -1,5 +1,18 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Copy, Check, Volume2, VolumeX, MoreHorizontal, ThumbsUp, ThumbsDown, Maximize2, Minimize2 } from "lucide-react";
+import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import bash from "react-syntax-highlighter/dist/esm/languages/prism/bash";
+import css from "react-syntax-highlighter/dist/esm/languages/prism/css";
+import javascript from "react-syntax-highlighter/dist/esm/languages/prism/javascript";
+import json from "react-syntax-highlighter/dist/esm/languages/prism/json";
+import jsx from "react-syntax-highlighter/dist/esm/languages/prism/jsx";
+import markup from "react-syntax-highlighter/dist/esm/languages/prism/markup";
+import python from "react-syntax-highlighter/dist/esm/languages/prism/python";
+import sql from "react-syntax-highlighter/dist/esm/languages/prism/sql";
+import typescript from "react-syntax-highlighter/dist/esm/languages/prism/typescript";
+import tsx from "react-syntax-highlighter/dist/esm/languages/prism/tsx";
+import yaml from "react-syntax-highlighter/dist/esm/languages/prism/yaml";
 import { formatForRender } from "@/lib/format";
 import {
   DropdownMenu,
@@ -35,21 +48,81 @@ function speak(text: string, lang: "en" | "ar") {
   window.speechSynthesis.speak(u);
 }
 
+const codeLanguages = {
+  bash,
+  css,
+  javascript,
+  json,
+  jsx,
+  markup,
+  python,
+  sql,
+  typescript,
+  tsx,
+  yaml,
+};
+
+for (const [name, grammar] of Object.entries(codeLanguages)) SyntaxHighlighter.registerLanguage(name, grammar);
+
+const languageAliases: Record<string, string> = {
+  bash: "bash",
+  sh: "bash",
+  shell: "bash",
+  css: "css",
+  html: "markup",
+  xml: "markup",
+  javascript: "javascript",
+  js: "javascript",
+  jsx: "jsx",
+  json: "json",
+  python: "python",
+  py: "python",
+  sql: "sql",
+  typescript: "typescript",
+  ts: "typescript",
+  tsx: "tsx",
+  yaml: "yaml",
+  yml: "yaml",
+};
+
 function CodeBlock({ code, language }: { code: string; language?: string }) {
   const [copied, setCopied] = useState(false);
+  const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const syntaxLanguage = languageAliases[language?.toLowerCase() ?? ""] ?? "text";
+
+  useEffect(() => () => {
+    if (copyTimeout.current) clearTimeout(copyTimeout.current);
+  }, []);
+
   const onCopy = async () => {
-    try { await navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {/* ignore */}
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      if (copyTimeout.current) clearTimeout(copyTimeout.current);
+      copyTimeout.current = setTimeout(() => setCopied(false), 2000);
+    } catch {/* ignore */}
   };
+
   return (
-    <div className="relative my-2 overflow-hidden rounded-lg border border-border bg-background/60">
-      <div className="flex items-center justify-between border-b border-border/60 bg-card/40 px-3 py-1 text-xs">
-        <span className="opacity-60">{language || "code"}</span>
-        <button onClick={onCopy} className="flex items-center gap-1 rounded px-2 py-0.5 hover:bg-background/60" title="Copy code">
+    <div dir="ltr" className="my-2 overflow-hidden rounded-xl border border-[#3c3c3c] bg-[#1e1e1e]">
+      <div className="flex items-center justify-between border-b border-[#3c3c3c] bg-[#2d2d2d] px-3 py-1.5 text-xs">
+        <span className="text-muted-foreground">{language || "code"}</span>
+        <button onClick={onCopy} className="flex items-center gap-1.5 rounded px-2 py-1 text-foreground/80 hover:bg-white/10" title={copied ? "تم النسخ ✓" : "نسخ الكود"} aria-label={copied ? "تم النسخ ✓" : "نسخ الكود"}>
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-          <span>{copied ? "Copied" : "Copy"}</span>
+          <span>{copied ? "تم النسخ ✓" : "نسخ الكود"}</span>
         </button>
       </div>
-      <pre className="overflow-x-auto p-3 text-xs"><code>{code}</code></pre>
+      <div className="overflow-x-auto overscroll-x-contain">
+        <SyntaxHighlighter
+          language={syntaxLanguage}
+          style={vscDarkPlus}
+          customStyle={{ margin: 0, minWidth: "max-content", padding: "1rem", background: "#1e1e1e", fontSize: "0.75rem", lineHeight: 1.6 }}
+          codeTagProps={{ style: { fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" } }}
+          PreTag="pre"
+        >
+          {code}
+        </SyntaxHighlighter>
+      </div>
     </div>
   );
 }

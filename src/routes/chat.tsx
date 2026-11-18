@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { isUnsafePrompt, safetyRefusal } from "@/lib/client-limits";
 import { addLibraryItem, saveGeneratedContent } from "@/lib/library";
-import { consumeUserMessage, FREE_DAILY_MESSAGE_LIMIT, GUEST_MESSAGE_LIMIT, quotaMessage, readVipStatus, toneInstruction } from "@/lib/freemium";
+import { consumeUserMessage, FREE_DAILY_MESSAGE_LIMIT, GUEST_MESSAGE_LIMIT, quotaMessage, readGuestMessageQuota, readVipStatus, toneInstruction } from "@/lib/freemium";
 
 import { supabase } from "@/integrations/supabase/client";
 import { chatStream } from "@/lib/chat.functions";
@@ -75,6 +75,9 @@ function ChatPage() {
   const libraryError = () => toast.error(lang === "ar" ? "تعذر حفظ المحتوى في المكتبة." : "Could not save content to the library.");
 
   useEffect(() => { setInput((current) => current.slice(0, maxMessageLength)); }, [maxMessageLength]);
+  useEffect(() => {
+    setMessageRemaining(user?.is_anonymous ? readGuestMessageQuota().remaining : null);
+  }, [user?.id, user?.is_anonymous]);
   useEffect(() => { if (!loading && !user) nav({ to: "/" }); }, [loading, user, nav]);
 
   useEffect(() => {
@@ -432,6 +435,13 @@ function ChatPage() {
                       {lang === "ar" ? "وصلت للحد الأقصى. رقِّ إلى VIP لرسائل أطول." : "Limit reached. Upgrade to VIP for longer messages."}
                     </span>
                   )}
+                  {user.is_anonymous && messageRemaining === 0 && (
+                    <span role="status" className="w-full text-[color:var(--vip)]">
+                      {lang === "ar"
+                        ? "استهلكت رسائل الزائر اليومية لهذا الجهاز (5/5) · سجّل الدخول بحسابك أو أنشئ حساباً مجانياً للحصول على 25 رسالة يومياً"
+                        : "You’ve used today’s 5 guest messages on this device (5/5). Sign in or create a free account for 25 messages per day."}
+                    </span>
+                  )}
                 </div>
                 <Textarea
                   value={input}
@@ -447,7 +457,7 @@ function ChatPage() {
                   <Square className="h-5 w-5" />
                 </Button>
               ) : (
-                <Button onClick={send} disabled={!input.trim() && pending.length === 0} className="h-14 w-14 brand-gradient text-primary-foreground" title={lang === "ar" ? "إرسال" : "Send"}>
+                <Button onClick={send} disabled={(user.is_anonymous && messageRemaining === 0) || (!input.trim() && pending.length === 0)} className="h-14 w-14 brand-gradient text-primary-foreground" title={lang === "ar" ? "إرسال" : "Send"}>
                   <Send className="h-5 w-5" />
                 </Button>
               )}
