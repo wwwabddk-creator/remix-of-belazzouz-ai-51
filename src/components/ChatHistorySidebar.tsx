@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, MessageSquare, MoreVertical, Pencil, BookMarked, Brain, Image as ImageIcon, Code, FileText, Download } from "lucide-react";
+import { Trash2, Plus, MessageSquare, MoreVertical, Pencil, BookMarked, Brain, Image as ImageIcon, Code, FileText, Download, Lock } from "lucide-react";
 import { useAppPrefs } from "@/lib/app-prefs";
 import { T } from "@/lib/i18n";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/lib/client-limits";
 import { readLibrary, removeLibraryItem, LIBRARY_CHANGED, type LibItem, type LibKind } from "@/lib/library";
 import { filterLibrary } from "@/lib/library-content";
+import { cleanHistoryText } from "@/lib/format";
 import { toast } from "sonner";
 import { SmartMemoryManager } from "@/components/SmartMemoryManager";
 
@@ -39,6 +40,7 @@ export function ChatHistorySidebar({
   const [lib, setLib] = useState<LibItem[]>([]);
   const [libFilter, setLibFilter] = useState<"all" | LibKind>("all");
   const [mem, setMem] = useState<string[]>([]);
+  const [exporting, setExporting] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -89,25 +91,68 @@ export function ChatHistorySidebar({
     await supabase.from("conversations").delete().eq("user_id", user.id);
     onNew(); load();
   };
-  const exportHistory = async () => {
-    if (!user || !isVip) return;
-    const [{ data: conversations }, { data: messages }] = await Promise.all([
-      supabase.from("conversations").select("id,title,created_at,updated_at").eq("user_id", user.id).order("created_at", { ascending: true }),
-      supabase.from("messages").select("conversation_id,role,content,created_at").eq("user_id", user.id).order("created_at", { ascending: true }),
-    ]);
-    const payload = {
-      exportedAt: new Date().toISOString(),
-      conversations: (conversations || []).map((conversation) => ({
-        ...conversation,
-        messages: (messages || []).filter((message) => message.conversation_id === conversation.id),
-      })),
-    };
-    const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `belazo-chat-history-${new Date().toISOString().slice(0, 10)}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+  const exportHistory = async (format: "docx" | "pdf" | "xlsx") => {
+    if (!user || !isVip || exporting) return;
+    setExporting(true);
+    try {
+      const messages: { role: string; content: string }[] = [];
+      const pageSize = 1000;
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error } = await supabase.from("messages").select("role,content")
+          .eq("user_id", user.id).order("created_at", { ascending: true }).order("id", { ascending: true })
+          .range(offset, offset + pageSize - 1);
+        if (error) throw error;
+        messages.push(...data);
+        if (data.length < pageSize) break;
+      }
+      const rows = messages.filter((message) => message.role === "user" || message.role === "assistant")
+        .map((message) => ({ label: message.role === "user" ? "أنت:" : "BELAZO AI:", text: cleanHistoryText(message.content) }));
+      const filename = `belazo-chat-history-${new Date().toISOString().slice(0, 10)}`;
+
+      if (format === "docx") {
+        const { Document, Packer, Paragraph, TextRun, AlignmentType } = await import("docx");
+        const doc = new Document({ sections: [{ children: rows.map(({ label, text }) => new Paragraph({
+          bidirectional: true,
+          alignment: AlignmentType.RIGHT,
+          spacing: { after: 240 },
+          children: [
+            new TextRun({ text: label, bold: true, rightToLeft: label === "أنت:" }),
+            ...text.split("\n").map((line, index) => new TextRun({ text: index === 0 ? ` ${line}` : line, break: index === 0 ? undefined : 1, rightToLeft: true })),
+          ],
+        })) }] });
+        const url = URL.createObjectURL(await Packer.toBlob(doc));
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = `${filename}.docx`;
+        anchor.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } else if (format === "xlsx") {
+        const XLSX = await import("xlsx");
+        const sheet = XLSX.utils.aoa_to_sheet([["المرسل", "الرسالة"], ...rows.map(({ label, text }) => [label, text])]);
+        sheet["!cols"] = [{ wch: 18 }, { wch: 80 }];
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, sheet, "Chat");
+        XLSX.writeFile(workbook, `${filename}.xlsx`);
+      } else {
+        const { default: html2pdf } = await import("html2pdf.js");
+        const container = document.createElement("div");
+        container.dir = "rtl";
+        container.style.cssText = "background:#fff;color:#222;font-family:Arial,Tahoma,sans-serif;font-size:14px;line-height:1.7;text-align:right;";
+        for (const { label, text } of rows) {
+          const paragraph = document.createElement("div");
+          paragraph.style.cssText = "margin:0 0 16px;white-space:pre-wrap;overflow-wrap:break-word;";
+          const speaker = document.createElement("strong");
+          speaker.textContent = label;
+          paragraph.append(speaker, document.createTextNode(` ${text}`));
+          container.append(paragraph);
+        }
+        await html2pdf().set({ margin: 12, filename: `${filename}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }, pagebreak: { mode: ["css", "legacy"] } }).from(container).save();
+      }
+    } catch {
+      toast.error(lang === "ar" ? "تعذر تصدير سجل المحادثات." : "Could not export chat history.");
+    } finally {
+      setExporting(false);
+    }
   };
   const removeLib = async (id: string) => {
     if (!user) return;
@@ -155,9 +200,22 @@ export function ChatHistorySidebar({
           <Button onClick={onNew} variant="outline" className="h-11 w-full justify-center gap-2">
             <Plus className="h-4 w-4" /> {t.newChat}
           </Button>
-          {isVip && (
-            <Button onClick={exportHistory} variant="outline" className="h-11 w-full justify-center gap-2">
-              <Download className="h-4 w-4" /> {lang === "ar" ? "تصدير السجل الكامل" : "Export full history"}
+          {isVip ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button disabled={exporting} variant="outline" className="h-11 w-full justify-center gap-2">
+                  <Download className="h-4 w-4" /> {exporting ? (lang === "ar" ? "جارٍ التصدير..." : "Exporting...") : (lang === "ar" ? "تصدير السجل الكامل" : "Export full history")}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-48">
+                <DropdownMenuItem onClick={() => void exportHistory("docx")}>Word (.docx)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void exportHistory("pdf")}>PDF (.pdf)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void exportHistory("xlsx")}>Excel (.xlsx)</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button onClick={onUpgrade} variant="outline" className="h-11 w-full justify-center gap-2">
+              <Lock className="h-4 w-4" /> {lang === "ar" ? "تصدير السجل الكامل" : "Export full history"}
             </Button>
           )}
           <div className="-mx-1 mt-1 flex-1 overflow-y-auto px-1">

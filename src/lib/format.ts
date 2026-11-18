@@ -30,6 +30,10 @@ export function stripMarkdown(input: string): string {
   return s.trim();
 }
 
+export function cleanHistoryText(input: string): string {
+  return stripMarkdown(input.replace(/\\r\\n|\\n|\\r/g, "\n").replace(/\r\n?/g, "\n"));
+}
+
 // Render plain text with themed titles. Splits on lines; lines that look like
 // "Title:" (short, ends with colon) become bold/primary-colored.
 // Returns React-ready segments as { type, text }[].
