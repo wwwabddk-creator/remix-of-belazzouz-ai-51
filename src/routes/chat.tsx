@@ -412,7 +412,6 @@ function ChatPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={`${t.typeMessage}  ·  /image …`}
-                disabled={busy}
                 rows={1}
                 className="min-h-[3.5rem] max-h-48 resize-none border-0 bg-transparent text-base focus-visible:ring-0"
               />
