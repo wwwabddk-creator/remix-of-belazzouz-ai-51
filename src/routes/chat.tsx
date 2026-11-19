@@ -370,7 +370,7 @@ function ChatPage() {
                     {m.content?.startsWith("__audio__:")
                       ? <audio src={m.content.slice(10)} controls className="h-10" />
                       : (m.content
-                          ? <MessageContent content={m.content} role={m.role} lang={lang} onFollowUp={followUp} />
+                          ? <MessageContent content={m.content} role={m.role} lang={lang} onFollowUp={followUp} isVip={isVip} onUpgrade={() => setShowVip(true)} />
                           : <span className="type-cursor inline-block min-h-[1em] min-w-[1ch]" />)}
 
                     {m.attachments?.map((a, k) => <AttachmentPreview key={k} att={a} />)}
@@ -466,7 +466,7 @@ function ChatPage() {
           </TabsContent>
 
           <TabsContent value="group">
-            <GroupChat />
+            <GroupChat isVip={isVip} onUpgrade={() => setShowVip(true)} />
           </TabsContent>
         </Tabs>
       </main>
@@ -481,7 +481,7 @@ function ChatPage() {
             const quota = await consumeUserMessage(user);
             setMessageRemaining(quota.remaining);
             if (!quota.allowed) return quotaMessage(lang, user.is_anonymous === true);
-            if (text.trim()) void extractMemory({ data: { message: text } }).catch(() => {});
+            if (text.trim() && isVip) void extractMemory({ data: { message: text } }).catch(() => {});
             const iter = (await streamFn({ data: { messages: [{ role: "user", content: text }], lang, mode: "fast", persona: isVip ? toneInstruction(tone, customTone) : undefined } })) as AsyncIterable<{ delta?: string }>;
             let acc = "";
             for await (const c of iter) acc += c?.delta || "";

@@ -24,7 +24,7 @@ export function VipModal({ open, onOpenChange, isVip = false }: { open: boolean;
     { Icon: Globe, text: ar ? "بحث مباشر على الإنترنت" : "Live Web Search", detail: ar ? "جلب الأخبار والمعلومات والأسعار اللحظية من الويب." : "Fetch real-time news, information and prices from the web.", upcoming: true },
     { Icon: Zap, text: ar ? "سرعة وأولوية قصوى" : "Maximum speed & priority", detail: ar ? "استجابة فورية بدون انتظار." : "Instant responses without waiting." },
     { Icon: Users, text: ar ? "شخصيات AI غير محدودة ونغمات رد مخصصة" : "Unlimited saved AI personas & custom response tones" },
-    { Icon: PanelsTopLeft, text: ar ? "معاينة حية وألعاب مصغرة تفاعلية (Canvas)" : "Live previews & interactive mini-games (Canvas)", upcoming: true },
+    { Icon: PanelsTopLeft, text: ar ? "معاينة حية وألعاب مصغرة تفاعلية (Canvas)" : "Live previews & interactive mini-games (Canvas)" },
     { Icon: Download, text: ar ? "تصدير سجل المحادثات كاملاً" : "Export full chat history", detail: "Word · PDF · Excel" },
   ];
 

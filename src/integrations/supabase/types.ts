@@ -188,7 +188,7 @@ export type Database = {
           memory_revision: number
           persona: string | null
           theme_config: Json | null
-          user_memory: string
+          user_memory: string | null
           voice_pref: string
         }
         Insert: {
@@ -204,7 +204,7 @@ export type Database = {
           memory_revision?: number
           persona?: string | null
           theme_config?: Json | null
-          user_memory?: string
+          user_memory?: string | null
           voice_pref?: string
         }
         Update: {
@@ -220,7 +220,7 @@ export type Database = {
           memory_revision?: number
           persona?: string | null
           theme_config?: Json | null
-          user_memory?: string
+          user_memory?: string | null
           voice_pref?: string
         }
         Relationships: []

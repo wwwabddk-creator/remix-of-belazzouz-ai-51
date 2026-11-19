@@ -29,7 +29,7 @@ type GMsg = {
 
 type Room = { id: string; name: string; created_by: string; created_at: string };
 
-export function GroupChat() {
+export function GroupChat({ isVip, onUpgrade }: { isVip: boolean; onUpgrade: () => void }) {
   const { user } = useAuth();
   const { lang } = useAppPrefs();
   const t = T[lang];
@@ -212,7 +212,7 @@ export function GroupChat() {
                   {m.audio_url ? (
                     <audio src={m.audio_url} controls className="mt-1 h-9 w-full max-w-[240px]" />
                   ) : (
-                    <MessageContent content={m.content} role={mine ? "user" : "assistant"} lang={lang} />
+                    <MessageContent content={m.content} role={mine ? "user" : "assistant"} lang={lang} isVip={isVip} onUpgrade={onUpgrade} canPreview={m.display_name === "🤖 AI"} />
                   )}
                 </div>
                 {mine && m.display_name !== "🤖 AI" && <UserAvatar user={user} />}

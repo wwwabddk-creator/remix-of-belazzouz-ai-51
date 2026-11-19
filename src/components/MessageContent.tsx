@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Copy, Check, Volume2, VolumeX, MoreHorizontal, ThumbsUp, ThumbsDown, Maximize2, Minimize2 } from "lucide-react";
+import { Copy, Check, Volume2, VolumeX, MoreHorizontal, ThumbsUp, ThumbsDown, Maximize2, Minimize2, PanelsTopLeft, Sun, Moon } from "lucide-react";
 import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import bash from "react-syntax-highlighter/dist/esm/languages/prism/bash";
@@ -22,6 +22,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
 function pickDefaultVoice(targetLang: string): SpeechSynthesisVoice | null {
@@ -70,6 +71,7 @@ const languageAliases: Record<string, string> = {
   shell: "bash",
   css: "css",
   html: "markup",
+  htm: "markup",
   xml: "markup",
   javascript: "javascript",
   js: "javascript",
@@ -85,8 +87,18 @@ const languageAliases: Record<string, string> = {
   yml: "yaml",
 };
 
-function CodeBlock({ code, language }: { code: string; language?: string }) {
+function CodeBlock({ code, language, lang, canPreview, isVip, onUpgrade }: { code: string; language?: string; lang: "en" | "ar"; canPreview: boolean; isVip: boolean; onUpgrade: () => void }) {
   const [copied, setCopied] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [fullScreen, setFullScreen] = useState(false);
+  const [whiteBackground, setWhiteBackground] = useState(true);
+  const normalizedLanguage = language?.toLowerCase() ?? "";
+  const isHtml = /^(?:\s*<!doctype\s+html\b|\s*<html\b)/i.test(code) || ["html", "htm"].includes(normalizedLanguage);
+  const previewable = canPreview && (isHtml || ["javascript", "js", "css"].includes(normalizedLanguage));
+  const encodedCode = JSON.stringify(code).replace(/</g, "\\u003c");
+  const previewDocument = isHtml ? code : normalizedLanguage === "css"
+    ? `<!doctype html><html><head><meta charset="utf-8"><script>(() => { const style = document.createElement('style'); style.textContent = ${encodedCode}; document.head.appendChild(style); })();<\/script></head><body></body></html>`
+    : `<!doctype html><html><head><meta charset="utf-8"></head><body><script>(() => { const script = document.createElement('script'); script.textContent = ${encodedCode}; document.body.appendChild(script); })();<\/script></body></html>`;
   const copyTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const syntaxLanguage = languageAliases[language?.toLowerCase() ?? ""] ?? "text";
 
@@ -107,10 +119,16 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
     <div dir="ltr" className="my-2 overflow-hidden rounded-xl border border-[#3c3c3c] bg-[#1e1e1e]">
       <div className="flex items-center justify-between border-b border-[#3c3c3c] bg-[#2d2d2d] px-3 py-1.5 text-xs">
         <span className="text-muted-foreground">{language || "code"}</span>
-        <button onClick={onCopy} className="flex items-center gap-1.5 rounded px-2 py-1 text-foreground/80 hover:bg-white/10" title={copied ? "تم النسخ ✓" : "نسخ الكود"} aria-label={copied ? "تم النسخ ✓" : "نسخ الكود"}>
-          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-          <span>{copied ? "تم النسخ ✓" : "نسخ الكود"}</span>
-        </button>
+        <div className="flex flex-wrap items-center justify-end gap-1">
+          {previewable && <button type="button" onClick={() => isVip ? setPreviewOpen(true) : onUpgrade()} className="flex items-center gap-1.5 rounded px-2 py-1 text-foreground/80 hover:bg-white/10">
+            <PanelsTopLeft className="h-3.5 w-3.5" />
+            <span>{lang === "ar" ? "معاينة حية (Canvas)" : "Live Preview (Canvas)"}</span>
+          </button>}
+          <button onClick={onCopy} className="flex items-center gap-1.5 rounded px-2 py-1 text-foreground/80 hover:bg-white/10" title={copied ? "تم النسخ ✓" : "نسخ الكود"} aria-label={copied ? "تم النسخ ✓" : "نسخ الكود"}>
+            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            <span>{copied ? "تم النسخ ✓" : "نسخ الكود"}</span>
+          </button>
+        </div>
       </div>
       <div className="overflow-x-auto overscroll-x-contain">
         <SyntaxHighlighter
@@ -123,6 +141,28 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
           {code}
         </SyntaxHighlighter>
       </div>
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent dir={lang === "ar" ? "rtl" : "ltr"} className={`flex flex-col gap-3 overflow-hidden p-4 ${fullScreen ? "h-[100dvh] w-screen max-w-none rounded-none" : "h-[85dvh] w-[calc(100%-2rem)] max-w-6xl"}`}>
+          <DialogHeader className="shrink-0 px-8 text-start">
+            <DialogTitle>{lang === "ar" ? "معاينة حية (Canvas)" : "Live Preview (Canvas)"}</DialogTitle>
+            <DialogDescription>{lang === "ar" ? "الكود والمعاينة التفاعلية" : "Code and interactive preview"}</DialogDescription>
+          </DialogHeader>
+          <div className="flex shrink-0 flex-wrap items-center gap-2 px-1">
+            <button type="button" onClick={() => setWhiteBackground((value) => !value)} className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent" aria-pressed={!whiteBackground}>
+              {whiteBackground ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {whiteBackground ? (lang === "ar" ? "خلفية بيضاء" : "White background") : (lang === "ar" ? "خلفية متكيفة" : "Adaptive background")}
+            </button>
+            <button type="button" onClick={() => setFullScreen((value) => !value)} className="flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent" aria-pressed={fullScreen}>
+              {fullScreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {fullScreen ? (lang === "ar" ? "تصغير" : "Exit full screen") : (lang === "ar" ? "ملء الشاشة" : "Full screen")}
+            </button>
+          </div>
+          <div className="grid min-h-0 flex-1 grid-rows-2 gap-3 md:grid-cols-2 md:grid-rows-1">
+            <pre dir="ltr" className="min-h-0 overflow-auto rounded-lg border border-[#3c3c3c] bg-[#1e1e1e] p-4 text-left text-xs leading-relaxed text-white"><code>{code}</code></pre>
+            <iframe title={lang === "ar" ? "المعاينة الحية" : "Live preview"} sandbox="allow-scripts" srcDoc={previewDocument} className={`h-full min-h-0 w-full rounded-lg border border-border ${whiteBackground ? "bg-white" : "bg-background"}`} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -141,9 +181,9 @@ function splitFences(input: string): Array<{ kind: "text"; value: string } | { k
 }
 
 export function MessageContent({
-  content, role, lang, onFollowUp,
+  content, role, lang, onFollowUp, isVip, onUpgrade, canPreview = role === "assistant",
 }: {
-  content: string; role: "user" | "assistant"; lang: "en" | "ar"; onFollowUp?: (instruction: string) => void;
+  content: string; role: "user" | "assistant"; lang: "en" | "ar"; onFollowUp?: (instruction: string) => void; isVip: boolean; onUpgrade: () => void; canPreview?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -168,7 +208,7 @@ export function MessageContent({
       <div className="leading-relaxed">
         {parts.map((p, idx) =>
           p.kind === "code" ? (
-            <CodeBlock key={idx} code={p.value} language={p.lang} />
+            <CodeBlock key={idx} code={p.value} language={p.lang} lang={lang} canPreview={canPreview} isVip={isVip} onUpgrade={onUpgrade} />
           ) : (
             <span key={idx}>
               {formatForRender(p.value).map((seg, i) => {

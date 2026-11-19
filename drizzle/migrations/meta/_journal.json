@@ -29,6 +29,13 @@
       "when": 1794896195980,
       "tag": "0003_vip_daily_image_quota",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794896195981,
+      "tag": "0004_nullable_vip_memory",
+      "breakpoints": true
     }
   ]
 }

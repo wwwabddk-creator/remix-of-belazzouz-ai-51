@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { memoryContext } from "./memory-rules";
 
 const Input = z.object({
-  messages: z.array(z.object({ role: z.enum(["user","assistant","system"]), content: z.string() })).min(1),
+  messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string() })).min(1),
   lang: z.enum(["en","ar"]).default("en"),
   weather: z.string().optional(),
   persona: z.string().max(500).optional(),
@@ -39,9 +39,12 @@ export const chatStream = createServerFn({ method: "POST" })
     }
     if (data.weather) system += `\n\nUser local context: ${data.weather}`;
     const { data: profile } = await context.supabase.from("profiles")
-      .select("is_vip,user_memory").eq("id", context.userId).maybeSingle();
-    system += memoryContext(profile);
-    if (profile?.is_vip) {
+      .select("is_vip").eq("id", context.userId).maybeSingle();
+    const isVip = profile?.is_vip === true && context.claims["is_anonymous"] !== true;
+    if (isVip) {
+      const { data: memoryProfile } = await context.supabase.from("profiles")
+        .select("user_memory").eq("id", context.userId).eq("is_vip", true).maybeSingle();
+      system += memoryContext({ is_vip: true, user_memory: memoryProfile?.user_memory ?? null });
       const { data: recent } = await context.supabase.from("messages")
         .select("role,content,created_at").eq("user_id", context.userId)
         .order("created_at", { ascending: false }).limit(20);
