@@ -12,11 +12,12 @@ describe("VIP persistent memory", () => {
       .toContain("I prefer Arabic and am building a bookstore.");
     expect(memoryContext({ is_vip: false, user_memory: "Private fact" })).toBe("");
   });
-  it("stops including memory after it is cleared", () => {
+  it("stops including memory after it is cleared or null", () => {
     expect(memoryContext({ is_vip: true, user_memory: "" })).toBe("");
+    expect(memoryContext({ is_vip: true, user_memory: null })).toBe("");
   });
   it("appends only distinct nonempty extracted facts", () => {
-    expect(cleanMemoryFacts([" Prefers Arabic ", "Prefers Arabic", "", "Building a bookstore"]))
+    expect(cleanMemoryFacts([" Prefers Arabic ", "prefers arabic", "", "Building a bookstore"]))
       .toEqual(["Prefers Arabic", "Building a bookstore"]);
   });
 });

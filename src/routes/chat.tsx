@@ -481,7 +481,7 @@ function ChatPage() {
             const quota = await consumeUserMessage(user);
             setMessageRemaining(quota.remaining);
             if (!quota.allowed) return quotaMessage(lang, user.is_anonymous === true);
-            if (text.trim()) void extractMemory({ data: { message: text } }).catch(() => {});
+            if (text.trim() && isVip) void extractMemory({ data: { message: text } }).catch(() => {});
             const iter = (await streamFn({ data: { messages: [{ role: "user", content: text }], lang, mode: "fast", persona: isVip ? toneInstruction(tone, customTone) : undefined } })) as AsyncIterable<{ delta?: string }>;
             let acc = "";
             for await (const c of iter) acc += c?.delta || "";
