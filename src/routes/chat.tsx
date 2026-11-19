@@ -370,7 +370,7 @@ function ChatPage() {
                     {m.content?.startsWith("__audio__:")
                       ? <audio src={m.content.slice(10)} controls className="h-10" />
                       : (m.content
-                          ? <MessageContent content={m.content} role={m.role} lang={lang} onFollowUp={followUp} />
+                          ? <MessageContent content={m.content} role={m.role} lang={lang} onFollowUp={followUp} isVip={isVip} onUpgrade={() => setShowVip(true)} />
                           : <span className="type-cursor inline-block min-h-[1em] min-w-[1ch]" />)}
 
                     {m.attachments?.map((a, k) => <AttachmentPreview key={k} att={a} />)}
@@ -466,7 +466,7 @@ function ChatPage() {
           </TabsContent>
 
           <TabsContent value="group">
-            <GroupChat />
+            <GroupChat isVip={isVip} onUpgrade={() => setShowVip(true)} />
           </TabsContent>
         </Tabs>
       </main>
