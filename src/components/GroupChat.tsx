@@ -10,7 +10,6 @@ import { T } from "@/lib/i18n";
 import { AttachmentButton, type Attachment } from "@/components/AttachmentButton";
 import { AttachmentPreview } from "@/components/AttachmentPreview";
 import { MessageContent } from "@/components/MessageContent";
-import { useServerFn } from "@tanstack/react-start";
 import { chatStream } from "@/lib/chat.functions";
 import { saveGeneratedContent } from "@/lib/library";
 import { toast } from "sonner";
@@ -99,7 +98,7 @@ export function GroupChat({ isVip, onUpgrade }: { isVip: boolean; onUpgrade: () 
       user?.email?.split("@")[0]) ??
     "User";
 
-  const streamFn = useServerFn(chatStream);
+  const streamFn = chatStream;
 
   const send = async () => {
     if ((!input.trim() && !pending) || !user || sending) return;

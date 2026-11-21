@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { z } from "zod";
+import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ export function AuthPanel() {
   const [mode, setMode] = useState<Mode>("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState<"in" | "up" | "guest" | null>(null);
 
@@ -94,8 +96,14 @@ export function AuthPanel() {
       <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); submit(); }}>
         <Input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)}
           placeholder={ar ? "البريد الإلكتروني" : "Email"} className="h-12 text-base" />
-        <Input type="password" autoComplete={mode === "in" ? "current-password" : "new-password"} required value={password} onChange={(e) => setPassword(e.target.value)}
-          placeholder={ar ? "كلمة المرور" : "Password"} className="h-12 text-base" />
+        <div className="relative">
+          <Input type={showPassword ? "text" : "password"} autoComplete={mode === "in" ? "current-password" : "new-password"} required value={password} onChange={(e) => setPassword(e.target.value)}
+            placeholder={ar ? "كلمة المرور" : "Password"} className="h-12 pe-12 text-base" />
+          <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? (ar ? "إخفاء كلمة المرور" : "Hide password") : (ar ? "إظهار كلمة المرور" : "Show password")} aria-pressed={showPassword}
+            className="absolute inset-y-0 end-1 flex w-10 items-center justify-center text-muted-foreground hover:text-foreground">
+            {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+          </button>
+        </div>
         <Button type="submit" size="lg" variant="secondary" disabled={loading !== null} className="h-14 w-full text-base font-semibold">
           {loading === mode ? "…" : mode === "in" ? (ar ? "تسجيل الدخول" : "Sign In") : (ar ? "إنشاء حساب" : "Create Account")}
         </Button>

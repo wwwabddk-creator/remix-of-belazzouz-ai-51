@@ -60,7 +60,7 @@ function ChatPage() {
   const [convId, setConvId] = useState<string | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const streamFn = useServerFn(chatStream);
+  const streamFn = chatStream;
   const searchFn = useServerFn(webSearch);
   const genFn = useServerFn(aiImageGenerate);
   const editFn = useServerFn(aiImageEdit);
